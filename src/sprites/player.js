@@ -15,40 +15,42 @@ const create = (id, { x, y, color = 0xff00ff }) => {
     physics,
     color,
     looking: { x: 1, y: 0 },
+    moving: { x: 0, y: 0 },
     hp: 100,
-    dead: Infinity,
     skills: {
       jump: Skill.create('jump', { cooldown: 1000, last: 100 }),
       shield: Skill.create('shield', { cooldown: 90, last: 100 }),
+      move: Skill.create('move', { cooldown: 0, last: Infinity }),
+      dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
     },
   }
 }
 
-// TODO: make dead a channeling skill without cooldown
-const isDead = player => isFinite(player.dead)
-
 const update = player => {
-  const { physics, skills, looking } = player
-  const { jump } = skills
+  const { physics, skills, looking, moving } = player
+  const { jump, move } = skills
 
+  // jump skill block the moving one
   if (Skill.isChanneling(jump)) {
     Body.setVelocity(physics, Vector.mult(looking, 40))
+  } else if (Skill.isChanneling(move)) {
+    Body.setVelocity(physics, Vector.mult(moving, 20))
   }
 }
 
 const draw = player => {
-  const { skills, dead, color, graphics, physics } = player
-  const { jump, shield } = skills
+  const { skills, color, graphics, physics } = player
+  const { jump, shield, dead } = skills
 
   graphics.clear()
 
-  if (dead + 100 <= Date.now()) return
+  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) return
 
   let circleSize = 40
-  if (isDead(player)) circleSize = (Date.now() - dead) * 10
+  if (Skill.isChanneling(dead)) circleSize = (dead.until - Date.now()) * 10
   if (Skill.isCooldown(jump)) circleSize = 35 // show cooldown
 
-  if (!isDead(player) && Skill.isChanneling(shield)) graphics.beginFill(color)
+  if (!Skill.isChanneling(dead) && Skill.isChanneling(shield)) graphics.beginFill(color)
 
   graphics.lineStyle(2, color)
   if (Skill.isChanneling(jump)) graphics.lineStyle(2, 0xffffff)
@@ -61,5 +63,4 @@ export default {
   create,
   update,
   draw,
-  isDead,
 }

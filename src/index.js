@@ -81,29 +81,16 @@ stage.addChild(viewport)
 // draw walls only once since it doesnt move
 Wall.draw(walls)
 
-const renderPixi = () => {
-  Player.draw(player)
-  Player.draw(enemy)
-
-  renderer.render(stage)
-}
-
-let lastUI
-let lastFPS
-var lastLoop = Date.now()
-
-// TODO: clear intervals one game is over or when ia is dead
-const ia = IA.create(enemy, { players: [player] })
-const localInputs = LocalInputs.create(player, { players: [enemy] })
-
 const ui = () => {
-  const skills = Object.values(player.skills)
+  const skills = ['jump', 'shield']
   const bindings = localInputs.bindings
-  const print = skills.map(({ id, next }) => {
-    let cooldown = 'ready !'
-    if (next >= Date.now()) cooldown = `${next - Date.now()}`.padStart(7, ' ')
 
-    return `${id}(${String.fromCharCode(bindings[id])}): ${cooldown}`
+  const print = skills.map(skillName => {
+    const skill = player.skills[skillName]
+
+    const cooldown = Skill.isCooldown(skill) ? `${skill.next - Date.now()}`.padStart(7, ' ') : 'ready !'
+
+    return `${skillName}(${String.fromCharCode(bindings[skillName])}): ${cooldown}`
   })
 
   print.push(`${player.hp} HP`)
@@ -121,6 +108,23 @@ const ui = () => {
   lastLoop = thisLoop
 }
 
+const renderPixi = () => {
+  Player.draw(player)
+  Player.draw(enemy)
+
+  ui()
+
+  renderer.render(stage)
+}
+
+let lastUI
+let lastFPS
+var lastLoop = Date.now()
+
+// TODO: clear intervals one game is over or when ia is dead
+const ia = IA.create(enemy, { players: [player] })
+const localInputs = LocalInputs.create(player, { players: [enemy] })
+
 Events.on(engine, 'collisionStart', function(event) {
   var pairs = event.pairs
 
@@ -133,7 +137,7 @@ Events.on(engine, 'collisionStart', function(event) {
         Pair.setActive(pairs[i], false)
         player.hp -= 50
         if (player.hp <= 0) {
-          player.dead = Date.now()
+          Skill.trigger(player.skills.dead)
           World.remove(engine.world, player.physics)
         }
       }
@@ -142,7 +146,7 @@ Events.on(engine, 'collisionStart', function(event) {
         Pair.setActive(pairs[i], false)
         enemy.hp -= 50
         if (enemy.hp <= 0) {
-          enemy.dead = Date.now()
+          Skill.trigger(enemy.skills.dead)
           World.remove(engine.world, enemy.physics)
         }
       }
@@ -153,15 +157,15 @@ Events.on(engine, 'collisionStart', function(event) {
 const loop = () => {
   window.requestAnimationFrame(loop)
 
+  // update inputs
+  IA.update(ia)
+  LocalInputs.update(localInputs)
+
   // update physics
   Player.update(player)
   Player.update(enemy)
 
-  ui()
-
-  IA.update(ia)
-  LocalInputs.update(localInputs)
-
+  // draw
   renderPixi()
 
   // Render.lookAt(render, boxA, { x: 500, y: 500 })

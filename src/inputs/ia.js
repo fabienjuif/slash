@@ -2,36 +2,43 @@ import { Common, Body, Vector } from 'matter-js'
 import Skill from '../skills/skill'
 import Inputs from './inputs'
 
-const create = (player, { players }) => {
-  const inputs = Inputs.create(player, { players })
+const create = (player, { players, pause = false }) => {
+  const inputs = Object.assign(
+    Inputs.create(player, { players }),
+    {
+      pause,
+      lastxDirection: 0,
+      lastyDirection: 0,
+      intervals: {
+        shield: 0,
+        jump: 0,
+      },
+    }
+  )
 
-  return Object.assign(inputs, {
-    lastxDirection: 0,
-    lastyDirection: 0,
-    intervals: {
-      // shield
-      shield: setInterval(() => {
-        Skill.trigger(player.skills.shield)
-      }, 200),
+  inputs.intervals.shield = setInterval(() => {
+    if (inputs.pause) return
+    Skill.trigger(player.skills.shield)
+  }, 200)
 
-      // jump
-      jump: setInterval(() => {
-        if (Skill.isCooldown(player.skills.jump)) return
+  inputs.intervals.jump = setInterval(() => {
+    if (inputs.pause) return
+    if (Skill.isCooldown(player.skills.jump)) return
 
-        let notJumpChances = 5
-        if (
-          Math.abs(players[0].physics.position.x - player.physics.position.x) < 200 &&
-          Math.abs(players[0].physics.position.y - player.physics.position.y) < 200
-        ) {
-          notJumpChances = 1
-        }
+    let notJumpChances = 5
+    if (
+      Math.abs(players[0].physics.position.x - player.physics.position.x) < 200 &&
+      Math.abs(players[0].physics.position.y - player.physics.position.y) < 200
+    ) {
+      notJumpChances = 1
+    }
 
-        if (Common.choose([...Array.from({ length: notJumpChances }).map(() => false), true])) {
-          Skill.trigger(player.skills.jump)
-        }
-      }, 500),
-    },
-  })
+    if (Common.choose([...Array.from({ length: notJumpChances }).map(() => false), true])) {
+      Skill.trigger(player.skills.jump)
+    }
+  }, 500)
+
+  return inputs
 }
 
 const clear = inputs => {
@@ -43,6 +50,8 @@ const clear = inputs => {
 }
 
 const update = inputs => {
+  if (inputs.pause) return
+
   const { player, players, lastxDirection, lastyDirection } = inputs
   const { skills, physics } = player
   const { jump } = skills
@@ -65,8 +74,13 @@ const update = inputs => {
   }
 }
 
+const pause = inputs => {
+  inputs.pause = true
+}
+
 export default {
   create,
   clear,
   update,
+  pause,
 }

@@ -67,12 +67,13 @@ const update = inputs => {
   if (!up && !down) y = 0
   if (!right && !left) x = 0
 
-  // TODO: don't move physics here
-  Body.setVelocity(physics, Vector.mult({ x, y }, 20))
-
   // looking to deplacement direction
+  player.moving.x = x
+  player.moving.y = y
   player.looking.x = x
   player.looking.y = y
+
+  Skill.trigger(skills.move)
 
   if (shield) {
     Skill.trigger(skills.shield)

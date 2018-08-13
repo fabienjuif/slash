@@ -1,4 +1,4 @@
-import { Bodies } from 'matter-js'
+import { Bodies, Body } from 'matter-js'
 
 export default (x, y, label) => {
   const physics = Bodies.circle(x, y, 40)
@@ -11,6 +11,8 @@ export default (x, y, label) => {
     },
     physics,
     shield: Date.now(),
+    jump: Date.now(),
     hp: 100,
+    dead: undefined,
   }
 }

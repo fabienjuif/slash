@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import Viewport from 'pixi-viewport'
 
-import { Engine, World, Body, Vector } from 'matter-js'
+import { Engine, World, Body, Vector, Events, Pair } from 'matter-js'
 import store from './store/index'
 import wallFactory from './sprites/wall'
 import playerFactory from './sprites/player'
@@ -39,7 +39,7 @@ const WORLD_SIZE = {
 }
 
 const player = playerFactory(WORLD_SIZE.x / 2, WORLD_SIZE.y / 2, 'player')
-const enemy = playerFactory(130, 130, 'enemy')
+const enemy = playerFactory(400, 400, 'enemy')
 
 var walls = [wallFactory(0, 0, WORLD_SIZE.x, 100), wallFactory(0, 0, 100, WORLD_SIZE.y), wallFactory(WORLD_SIZE.x - 100, 0, 100, WORLD_SIZE.y), wallFactory(0, WORLD_SIZE.y - 100, WORLD_SIZE.x, 100)]
 
@@ -83,13 +83,18 @@ const look = () => {
 }
 
 const jump = () => {
+  if (player.jump >= Date.now()) {
+    Body.setVelocity(player.physics, Vector.mult(looking, 40))
+    return true
+  }
+
   const { id, running } = store.skills.get('jump')
   if (!running) return false
 
   // running it one time
   store.skills.update({ id, running: false })
 
-  Body.setVelocity(player.physics, Vector.mult(looking, 80))
+  player.jump = Date.now() + 100
   return true
 }
 
@@ -133,15 +138,22 @@ const renderPixi = () => {
 
   // player
   if (player.shield >= Date.now()) playerGraphics.beginFill(0xff00ff)
-  playerGraphics.lineStyle(2, 0xff00ff)
+  if (player.jump >= Date.now()) {
+    playerGraphics.lineStyle(2, 0xffffff)
+  } else {
+    playerGraphics.lineStyle(2, 0xff00ff)
+  }
   playerGraphics.drawCircle(player.physics.position.x, player.physics.position.y, 40)
   playerGraphics.endFill()
   viewport.follow(player.physics.position, { speed: 20, radius: 100 })
 
   // enemy
-  graphics.lineStyle(2, 0xffff00)
-  graphics.drawCircle(enemy.physics.position.x, enemy.physics.position.y, 40)
-  graphics.endFill()
+  if (!enemy.dead || enemy.dead > Date.now() - 100) {
+    const circleSize = enemy.dead ? (Date.now() - enemy.dead) * 10 : 40
+    graphics.lineStyle(2, 0xffff00)
+    graphics.drawCircle(enemy.physics.position.x, enemy.physics.position.y, circleSize)
+    graphics.endFill()
+  }
 
   // walls
   walls.forEach(wall => {
@@ -158,17 +170,39 @@ let lastUI
 const ui = () => {
   const skills = store.skills.getAsArray()
   const bindings = store.bindings.get()
-  const cooldowns = skills.map(({ id, next }) => {
+  const print = skills.map(({ id, next }) => {
     let cooldown = 'ready !'
     if (next >= Date.now()) cooldown = `${next - Date.now()}`.padStart(7, ' ')
 
     return `${id}(${String.fromCharCode(bindings[id])}): ${cooldown}`
   })
 
+  print.push(`${player.hp} HP`)
+  print.push(`${enemy.hp} E.HP`)
+
   if (lastUI) stage.removeChild(lastUI)
-  lastUI = stage.addChild(new PIXI.Text(cooldowns.join(' | '), { fill: 'white' }))
+  lastUI = stage.addChild(new PIXI.Text(print.join(' | '), { fill: 'white' }))
 }
 
+Events.on(engine, 'collisionStart', function(event) {
+  var pairs = event.pairs
+
+  // change object colours to show those starting a collision
+  for (var i = 0; i < pairs.length; i++) {
+    const { bodyA, bodyB } = pairs[i]
+
+    if (['player', 'enemy'].includes(bodyA.label) && ['player', 'enemy'].includes(bodyB.label)) {
+      if (player.jump >= Date.now()) {
+        Pair.setActive(pairs[i], false)
+        enemy.hp -= 50
+        if (enemy.hp <= 0) {
+          enemy.dead = Date.now()
+          World.remove(engine.world, enemy.physics)
+        }
+      }
+    }
+  }
+})
 
 const loop = () => {
   window.requestAnimationFrame(loop)

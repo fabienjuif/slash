@@ -25,6 +25,5 @@ Default keys are
  - **later ?** add the ability to break walls
 
 ## Librairies
- - state manager: [k-ramel](https://github.com/alakarteio/k-ramel)
  - physics engine: [matter-js](https://github.com/liabru/matter-js)
  - graphical engine: [pixi-js](http://www.pixijs.com/)

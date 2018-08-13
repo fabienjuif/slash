@@ -5,33 +5,17 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "parcel public/index.html -p 3000",
-    "format": "prettier --write src/**/*.js",
-    "precise-commits": "precise-commits"
+    "start": "parcel public/index.html -p 3000"
   },
   "author": "Fabien JUIF <fabien.juif@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "k-ramel": "^0.15.1",
     "matter-js": "^0.14.2",
     "pixi-viewport": "^3.2.1",
     "pixi.js": "^4.8.1"
   },
   "devDependencies": {
     "husky": "^1.0.0-rc.13",
-    "parcel-bundler": "^1.9.7",
-    "precise-commits": "^1.0.2",
-    "prettier": "^1.14.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "precise-commits"
-    }
-  },
-  "prettier": {
-    "printWidth": 200,
-    "semi": false,
-    "singleQuote": true,
-    "trailingComma": "all"
+    "parcel-bundler": "^1.9.7"
   }
 }

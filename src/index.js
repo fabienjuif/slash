@@ -2,9 +2,12 @@ import * as PIXI from 'pixi.js'
 import Viewport from 'pixi-viewport'
 
 import { Engine, World, Body, Vector, Events, Pair, Common } from 'matter-js'
-import store from './store/index'
-import wallFactory from './sprites/wall'
-import playerFactory from './sprites/player'
+
+import Wall from './sprites/wall'
+import Player from './sprites/player'
+import Skill from './skills/skill'
+import IA from './inputs/ia'
+import LocalInputs from './inputs/local'
 
 // create an engine
 var engine = Engine.create()
@@ -38,10 +41,15 @@ const WORLD_SIZE = {
   y: 1200,
 }
 
-const player = playerFactory(WORLD_SIZE.x / 2, WORLD_SIZE.y / 2, 'player')
-const enemy = playerFactory(400, 400, 'enemy')
+const player = Player.create('player', { x: WORLD_SIZE.x / 2, y: WORLD_SIZE.y / 2 })
+const enemy = Player.create('enemy', { x: 400, y: 400, color: 0xffff00 })
 
-var walls = [wallFactory(0, 0, WORLD_SIZE.x, 100), wallFactory(0, 0, 100, WORLD_SIZE.y), wallFactory(WORLD_SIZE.x - 100, 0, 100, WORLD_SIZE.y), wallFactory(0, WORLD_SIZE.y - 100, WORLD_SIZE.x, 100)]
+const walls = [
+  Wall.create(0, 0, WORLD_SIZE.x, 100), //
+  Wall.create(0, 0, 100, WORLD_SIZE.y), //
+  Wall.create(WORLD_SIZE.x - 100, 0, 100, WORLD_SIZE.y), //
+  Wall.create(0, WORLD_SIZE.y - 100, WORLD_SIZE.x, 100), //
+]
 
 // add all of the bodies to the world
 World.add(engine.world, [player.physics, enemy.physics, ...walls.map(({ physics }) => physics)])
@@ -51,63 +59,6 @@ Engine.run(engine)
 
 // run the renderer
 // Render.run(render)
-
-//
-let looking = { x: 1, y: 0 }
-
-const move = () => {
-  const { up, right, bottom, left } = store.inputs.get()
-
-  let x = 0
-  let y = 0
-  if (up) y = -1
-  if (bottom) y = 1
-  if (right) x = 1
-  if (left) x = -1
-  if (!up && !bottom) y = 0
-  if (!left && !right) x = 0
-
-  Body.setVelocity(player.physics, Vector.mult({ x, y }, 20))
-}
-
-const look = () => {
-  const { up, right, bottom, left } = store.inputs.get()
-
-  if (up) looking.y = -1
-  if (bottom) looking.y = 1
-  if (right) looking.x = 1
-  if (left) looking.x = -1
-
-  if (!up && !bottom && (left || right)) looking.y = 0
-  if (!left && !right && (up || bottom)) looking.x = 0
-}
-
-const jump = () => {
-  if (player.jump >= Date.now()) {
-    Body.setVelocity(player.physics, Vector.mult(looking, 40))
-    return true
-  }
-
-  const { id, running } = store.skills.get('jump')
-  if (!running) return false
-
-  // running it one time
-  store.skills.update({ id, running: false })
-
-  player.jump = Date.now() + 100
-  return true
-}
-
-const shield = () => {
-  const { id, running } = store.skills.get('shield')
-  if (!running) return false
-
-  // running it one time
-  store.skills.update({ id, running: false })
-
-  player.shield = Date.now() + 100
-  return true
-}
 
 const renderer = PIXI.autoDetectRenderer(innerWidth, innerHeight, {
   backgroundColor: 0x000000,
@@ -120,57 +71,34 @@ const viewport = new Viewport({
   worldWidth: WORLD_SIZE.x,
   worldHeight: WORLD_SIZE.y,
 })
+viewport.follow(player.physics.position, { speed: 20, radius: 100 })
+viewport.addChild(player.graphics)
+viewport.addChild(enemy.graphics)
+walls.forEach(wall => viewport.addChild(wall.graphics))
+
 stage.addChild(viewport)
 
-// // activate plugins
-// viewport
-//     .drag()
-//     .wheel()
-
-const graphics = new PIXI.Graphics()
-// const playerGraphics = new PIXI.Graphics()
-viewport.addChild(graphics)
-// viewport.addChild(playerGraphics)
+// draw walls only once since it doesnt move
+Wall.draw(walls)
 
 const renderPixi = () => {
-  graphics.clear()
-
-  // viewport
-  viewport.follow(player.physics.position, { speed: 20, radius: 100 });
-
-  // players
-  const printPlayer = ({ shield, jump, physics, label, dead }) => {
-    if (dead + 100 <= Date.now()) return
-    const circleSize = dead ? (Date.now() - dead) * 10 : 40
-
-    const color = label === 'player' ? 0xff00ff : 0xffff00
-    if (!dead && shield >= Date.now()) graphics.beginFill(color)
-
-    graphics.lineStyle(2, color)
-    if (jump >= Date.now()) graphics.lineStyle(2, 0xffffff)
-
-    graphics.drawCircle(physics.position.x, physics.position.y, circleSize)
-    graphics.endFill()
-  }
-
-  printPlayer(player)
-  printPlayer(enemy)
-
-  // walls
-  walls.forEach(wall => {
-    graphics.lineStyle(0, 0xff00ff)
-    graphics.beginFill(0x00ffff)
-    graphics.drawRect(wall.graphics.x, wall.graphics.y, wall.graphics.width, wall.graphics.height)
-    graphics.endFill()
-  })
+  Player.draw(player)
+  Player.draw(enemy)
 
   renderer.render(stage)
 }
 
 let lastUI
+let lastFPS
+var lastLoop = Date.now()
+
+// TODO: clear intervals one game is over or when ia is dead
+const ia = IA.create(enemy, { players: [player] })
+const localInputs = LocalInputs.create(player, { players: [enemy] })
+
 const ui = () => {
-  const skills = store.skills.getAsArray()
-  const bindings = store.bindings.get()
+  const skills = Object.values(player.skills)
+  const bindings = localInputs.bindings
   const print = skills.map(({ id, next }) => {
     let cooldown = 'ready !'
     if (next >= Date.now()) cooldown = `${next - Date.now()}`.padStart(7, ' ')
@@ -183,6 +111,14 @@ const ui = () => {
 
   if (lastUI) stage.removeChild(lastUI)
   lastUI = stage.addChild(new PIXI.Text(print.join(' | '), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))
+
+  if (lastFPS) stage.removeChild(lastFPS)
+  var thisLoop = Date.now()
+  const fps = new PIXI.Text(1000 / (thisLoop - lastLoop), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
+  fps.position.y = window.innerHeight - 30
+  fps.position.x = window.innerWidth - 50
+  lastFPS = stage.addChild(fps)
+  lastLoop = thisLoop
 }
 
 Events.on(engine, 'collisionStart', function(event) {
@@ -193,7 +129,7 @@ Events.on(engine, 'collisionStart', function(event) {
     const { bodyA, bodyB } = pairs[i]
 
     if (['player', 'enemy'].includes(bodyA.label) && ['player', 'enemy'].includes(bodyB.label)) {
-      if (enemy.jump >= Date.now() && player.shield < Date.now()) {
+      if (Skill.isChanneling(enemy.skills.jump) && !Skill.isChanneling(player.skills.shield)) {
         Pair.setActive(pairs[i], false)
         player.hp -= 50
         if (player.hp <= 0) {
@@ -202,7 +138,7 @@ Events.on(engine, 'collisionStart', function(event) {
         }
       }
 
-      if (player.jump >= Date.now() && enemy.shield < Date.now()) {
+      if (Skill.isChanneling(player.skills.jump) && !Skill.isChanneling(enemy.skills.shield)) {
         Pair.setActive(pairs[i], false)
         enemy.hp -= 50
         if (enemy.hp <= 0) {
@@ -214,58 +150,22 @@ Events.on(engine, 'collisionStart', function(event) {
   }
 })
 
-const ia = () => {
-  setInterval(() => {
-    enemy.shield = Common.choose([enemy.shield, enemy.shield, Date.now() + 100])
-  }, 200)
-
-  setInterval(() => {
-    if (enemy.jump < Date.now() - 1000) { // Cooldown
-      // console.log(distance)
-      let notJumpChances = 5
-      if (
-        Math.abs(enemy.physics.position.x - player.physics.position.x) < 200 &&
-        Math.abs(enemy.physics.position.y - player.physics.position.y) < 200
-      ) notJumpChances = 1
-
-      enemy.jump = Common.choose([...Array.from({ length: notJumpChances }).map(() => enemy.jump), Date.now() + 100])
-    }
-  }, 500)
-}
-
-ia()
-
-let lastxDirection = 0
-let lastyDirection = 0
-
 const loop = () => {
   window.requestAnimationFrame(loop)
 
+  // update physics
+  Player.update(player)
+  Player.update(enemy)
+
   ui()
 
-  look()
-  shield()
-  if (!jump()) move()
-
-  // ia
-  if (enemy.jump < Date.now()) {
-    let xDirection = 1
-    let yDirection = 1
-    if (enemy.physics.position.x > player.physics.position.x) xDirection = -1
-    if (enemy.physics.position.y > player.physics.position.y) yDirection = -1
-
-    lastxDirection = Common.choose([0, lastxDirection, lastxDirection, lastxDirection, lastxDirection, lastxDirection, xDirection])
-    lastyDirection = Common.choose([0, lastyDirection, lastyDirection, lastyDirection, lastyDirection, lastyDirection, yDirection])
-
-    Body.setVelocity(enemy.physics, Vector.mult({ x: lastxDirection, y: lastyDirection }, 20))
-  }
+  IA.update(ia)
+  LocalInputs.update(localInputs)
 
   renderPixi()
 
   // Render.lookAt(render, boxA, { x: 500, y: 500 })
 
-  engine.world.bodies.forEach(body => {
-    Body.setAngle(body, 0)
-  })
+  engine.world.bodies.forEach(body => Body.setAngle(body, 0))
 }
 loop()

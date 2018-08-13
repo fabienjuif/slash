@@ -28,13 +28,18 @@ const create = (id, { x, y, color = 0xff00ff }) => {
 
 const update = player => {
   const { physics, skills, looking, moving } = player
-  const { jump } = skills
+  const { jump, shield } = skills
 
   // jump skill block the moving one
   if (Skill.isChanneling(jump)) {
     Body.setVelocity(physics, Vector.mult(looking, 40))
   } else {
     Body.setVelocity(physics, Vector.mult(moving, 20))
+  }
+
+  // remove some hp when channeling shield
+  if (Skill.isChanneling(shield)) {
+    player.hp -= (Date.now() - shield.since) / 1000
   }
 }
 

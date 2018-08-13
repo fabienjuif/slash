@@ -93,8 +93,8 @@ const ui = () => {
     return `${skillName}(${String.fromCharCode(bindings[skillName])}): ${cooldown}`
   })
 
-  print.push(`${player.hp} HP`)
-  print.push(`${enemy.hp} E.HP`)
+  print.push(`${Math.floor(player.hp)} HP`)
+  print.push(`${Math.floor(enemy.hp)} E.HP`)
 
   if (lastUI) stage.removeChild(lastUI)
   lastUI = stage.addChild(new PIXI.Text(print.join(' | '), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))

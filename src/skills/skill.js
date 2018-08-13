@@ -3,6 +3,7 @@ const create = (id, { cooldown, last }) => {
     id,
     cooldown,
     last,
+    since: Date.now(),
     next: Date.now() - cooldown * 2,
     until: Date.now() - cooldown * 2,
   }
@@ -13,6 +14,7 @@ const trigger = skill => {
 
   if (next >= Date.now()) return skill
 
+  skill.since = Date.now()
   skill.next = Date.now() + cooldown
   skill.until = Date.now() + last
 

@@ -1,59 +1,56 @@
-import { Engine, Render, World, Bodies, Body, Vector } from 'matter-js'
+import * as PIXI from 'pixi.js'
+import Viewport from 'pixi-viewport'
+
+import { Engine, World, Body, Vector } from 'matter-js'
 import store from './store/index'
+import wallFactory from './sprites/wall'
+import playerFactory from './sprites/player'
 
 // create an engine
 var engine = Engine.create()
 engine.world.gravity = { x: 0, y: 0 }
 
+// FIXME: move it to a directory one we need debug
 // create a renderer
-var render = Render.create({
-  element: document.body,
-  engine: engine,
-  options: {
-    width: window.innerWidth,
-    height: window.innerHeight,
-    pixelRatio: 0.8,
-    wireframeBackground: '#222',
-    hasBounds: false,
-    wireframes: true,
-    showDebug: true,
-    showBroadphase: true,
-    showBounds: true,
-    showVelocity: true,
-    showAxes: true,
-    showPositions: true,
-    showIds: true,
-    showVertexNumbers: true,
-  },
-})
+// var render = Render.create({
+//   element: document.body,
+//   engine: engine,
+//   options: {
+//     width: window.innerWidth,
+//     height: window.innerHeight,
+//     pixelRatio: 0.8,
+//     wireframeBackground: '#222',
+//     hasBounds: false,
+//     wireframes: true,
+//     showDebug: true,
+//     showBroadphase: true,
+//     showBounds: true,
+//     showVelocity: true,
+//     showAxes: true,
+//     showPositions: true,
+//     showIds: true,
+//     showVertexNumbers: true,
+//   },
+// })
 
-// create two boxes and a ground
 const WORLD_SIZE = {
   x: 1600,
   y: 1200,
 }
 
-var boxA = Bodies.circle(WORLD_SIZE.x / 2, WORLD_SIZE.y / 2, 40, undefined, 10)
-var boxB = Bodies.circle(10, 120, 40, undefined, 10)
-var walls = [
-  Bodies.rectangle(WORLD_SIZE.x / 2, 5, WORLD_SIZE.x, 100, { isStatic: true }),
-  Bodies.rectangle(5, WORLD_SIZE.y / 2, 100, WORLD_SIZE.y, { isStatic: true }),
-  Bodies.rectangle(WORLD_SIZE.x - 5, WORLD_SIZE.y / 2, 100, WORLD_SIZE.y, {
-    isStatic: true,
-  }),
-  Bodies.rectangle(WORLD_SIZE.x / 2, WORLD_SIZE.y - 5, WORLD_SIZE.x, 100, {
-    isStatic: true,
-  }),
-]
+const player = playerFactory(WORLD_SIZE.x / 2, WORLD_SIZE.y / 2, 'player')
+const enemy = playerFactory(130, 130, 'enemy')
+
+var walls = [wallFactory(0, 0, WORLD_SIZE.x, 100), wallFactory(0, 0, 100, WORLD_SIZE.y), wallFactory(WORLD_SIZE.x - 100, 0, 100, WORLD_SIZE.y), wallFactory(0, WORLD_SIZE.y - 100, WORLD_SIZE.x, 100)]
 
 // add all of the bodies to the world
-World.add(engine.world, [boxA, boxB, ...walls])
+World.add(engine.world, [player.physics, enemy.physics, ...walls.map(({ physics }) => physics)])
 
 // run the engine
 Engine.run(engine)
 
 // run the renderer
-Render.run(render)
+// Render.run(render)
 
 //
 let looking = { x: 1, y: 0 }
@@ -70,7 +67,7 @@ const move = () => {
   if (!up && !bottom) y = 0
   if (!left && !right) x = 0
 
-  Body.setVelocity(boxA, Vector.mult({ x, y }, 20))
+  Body.setVelocity(player.physics, Vector.mult({ x, y }, 20))
 }
 
 const look = () => {
@@ -92,7 +89,7 @@ const jump = () => {
   // running it one time
   store.skills.update({ id, running: false })
 
-  Body.setVelocity(boxA, Vector.mult(looking, 60))
+  Body.setVelocity(player.physics, Vector.mult(looking, 80))
   return true
 }
 
@@ -103,25 +100,75 @@ const shield = () => {
   // running it one time
   store.skills.update({ id, running: false })
 
-  // TODO: Body.setVelocity(boxA, Vector.mult(looking, 60))
+  player.shield = Date.now() + 100
   return true
 }
 
-const ui = () => {
-  console.clear()
+const renderer = PIXI.autoDetectRenderer(innerWidth, innerHeight, {
+  backgroundColor: 0x000000,
+})
+const stage = new PIXI.Container()
+document.body.appendChild(renderer.view)
+const viewport = new Viewport({
+  screenWidth: window.innerWidth,
+  screenHeight: window.innerHeight,
+  worldWidth: WORLD_SIZE.x,
+  worldHeight: WORLD_SIZE.y,
+})
+stage.addChild(viewport)
 
+// // activate plugins
+// viewport
+//     .drag()
+//     .wheel()
+
+const graphics = new PIXI.Graphics()
+const playerGraphics = new PIXI.Graphics()
+viewport.addChild(graphics)
+viewport.addChild(playerGraphics)
+
+const renderPixi = () => {
+  playerGraphics.clear()
+  graphics.clear()
+
+  // player
+  if (player.shield >= Date.now()) playerGraphics.beginFill(0xff00ff)
+  playerGraphics.lineStyle(2, 0xff00ff)
+  playerGraphics.drawCircle(player.physics.position.x, player.physics.position.y, 40)
+  playerGraphics.endFill()
+  viewport.follow(player.physics.position, { speed: 20, radius: 100 })
+
+  // enemy
+  graphics.lineStyle(2, 0xffff00)
+  graphics.drawCircle(enemy.physics.position.x, enemy.physics.position.y, 40)
+  graphics.endFill()
+
+  // walls
+  walls.forEach(wall => {
+    graphics.lineStyle(0, 0xff00ff)
+    graphics.beginFill(0x00ffff)
+    graphics.drawRect(wall.graphics.x, wall.graphics.y, wall.graphics.width, wall.graphics.height)
+    graphics.endFill()
+  })
+
+  renderer.render(stage)
+}
+
+let lastUI
+const ui = () => {
   const skills = store.skills.getAsArray()
+  const bindings = store.bindings.get()
   const cooldowns = skills.map(({ id, next }) => {
     let cooldown = 'ready !'
     if (next >= Date.now()) cooldown = `${next - Date.now()}`.padStart(7, ' ')
 
-    return `${id}: ${cooldown}`
+    return `${id}(${String.fromCharCode(bindings[id])}): ${cooldown}`
   })
 
-  console.log(cooldowns.join(' | '))
-  console.log('')
-  console.log('bindings: arrows / jump: c / shield: v')
+  if (lastUI) stage.removeChild(lastUI)
+  lastUI = stage.addChild(new PIXI.Text(cooldowns.join(' | '), { fill: 'white' }))
 }
+
 
 const loop = () => {
   window.requestAnimationFrame(loop)
@@ -132,9 +179,12 @@ const loop = () => {
   shield()
   if (!jump()) move()
 
-  Render.lookAt(render, boxA, { x: 500, y: 500 })
+  renderPixi()
 
-  Body.setAngle(boxA, 0)
-  Body.setAngle(boxB, 0)
+  // Render.lookAt(render, boxA, { x: 500, y: 500 })
+
+  engine.world.bodies.forEach(body => {
+    Body.setAngle(body, 0)
+  })
 }
 loop()

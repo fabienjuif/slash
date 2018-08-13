@@ -3,6 +3,7 @@ import inputs from './inputs/index'
 import skills from './skills'
 
 const store = createStore({
+  positions: types.keyValue(),
   skills: types.keyValue(),
   inputs: types.object(),
   bindings: types.object(),

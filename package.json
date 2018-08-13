@@ -13,7 +13,9 @@
   "license": "MIT",
   "dependencies": {
     "k-ramel": "^0.15.1",
-    "matter-js": "^0.14.2"
+    "matter-js": "^0.14.2",
+    "pixi-viewport": "^3.2.1",
+    "pixi.js": "^4.8.1"
   },
   "devDependencies": {
     "husky": "^1.0.0-rc.13",

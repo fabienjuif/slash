@@ -28,12 +28,12 @@ const create = (id, { x, y, color = 0xff00ff }) => {
 
 const update = player => {
   const { physics, skills, looking, moving } = player
-  const { jump, move } = skills
+  const { jump } = skills
 
   // jump skill block the moving one
   if (Skill.isChanneling(jump)) {
     Body.setVelocity(physics, Vector.mult(looking, 40))
-  } else if (Skill.isChanneling(move)) {
+  } else {
     Body.setVelocity(physics, Vector.mult(moving, 20))
   }
 }

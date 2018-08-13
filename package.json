@@ -1,0 +1,35 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel public/index.html -p 3000",
+    "format": "prettier --write src/**/*.js",
+    "precise-commits": "precise-commits"
+  },
+  "author": "Fabien JUIF <fabien.juif@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "k-ramel": "^0.15.1",
+    "matter-js": "^0.14.2"
+  },
+  "devDependencies": {
+    "husky": "^1.0.0-rc.13",
+    "parcel-bundler": "^1.9.7",
+    "precise-commits": "^1.0.2",
+    "prettier": "^1.14.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "precise-commits"
+    }
+  },
+  "prettier": {
+    "printWidth": 200,
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
+  }
+}

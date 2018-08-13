@@ -1,7 +1,6 @@
-import * as PIXI from 'pixi.js'
-import Viewport from 'pixi-viewport'
+import { Text } from 'pixi.js'
 
-import { Engine, World, Body, Vector, Events, Pair, Common } from 'matter-js'
+import { Engine, World, Body, Events, Pair } from 'matter-js'
 
 import Wall from './sprites/wall'
 import Player from './sprites/player'
@@ -58,11 +57,11 @@ const ui = () => {
   print.push(`${Math.floor(enemy.hp)} E.HP`)
 
   if (lastUI) Renderer.removeFromStage(renderer, { graphics: lastUI })
-  lastUI = Renderer.addToStage(renderer, { graphics: new PIXI.Text(print.join(' | '), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }) })
+  lastUI = Renderer.addToStage(renderer, { graphics: new Text(print.join(' | '), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }) })
 
   if (lastFPS) Renderer.removeFromStage(renderer, { graphics: lastFPS })
   var thisLoop = Date.now()
-  const fps = new PIXI.Text(1000 / (thisLoop - lastLoop), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
+  const fps = new Text(1000 / (thisLoop - lastLoop), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
   fps.position.y = window.innerHeight - 30
   fps.position.x = window.innerWidth - 50
   lastFPS = Renderer.addToStage(renderer, { graphics: fps })

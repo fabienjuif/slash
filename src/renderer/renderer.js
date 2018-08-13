@@ -1,4 +1,4 @@
-import * as PIXI from 'pixi.js'
+import { Container, autoDetectRenderer } from 'pixi.js'
 import Viewport from 'pixi-viewport'
 import { Render } from 'matter-js'
 
@@ -31,10 +31,10 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
 
     Render.run(renderer)
   } else {
-    renderer = PIXI.autoDetectRenderer(screenWidth, screenHeight, {
+    renderer = autoDetectRenderer(screenWidth, screenHeight, {
       backgroundColor: 0x000000,
     })
-    stage = new PIXI.Container()
+    stage = new Container()
     document.body.appendChild(renderer.view)
     viewport = new Viewport({
       screenWidth,
@@ -58,8 +58,6 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
 
 const update = renderer => {
   const { matter, follow } = renderer
-
-  console.log({ matter, follow })
 
   if (matter) {
     if (follow) {

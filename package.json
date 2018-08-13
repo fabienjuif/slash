@@ -5,7 +5,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "parcel public/index.html -p 3000"
+    "start": "parcel public/index.html -p 3000",
+    "build": "parcel build public/index.html --no-source-maps"
   },
   "author": "Fabien JUIF <fabien.juif@gmail.com>",
   "license": "MIT",

@@ -1,4 +1,4 @@
-import * as PIXI from 'pixi.js'
+import { Graphics } from 'pixi.js'
 import { Bodies, Body, Vector } from 'matter-js'
 import Skill from '../skills/skill'
 
@@ -6,7 +6,7 @@ const create = (id, { x, y, color = 0xff00ff }) => {
   const physics = Bodies.circle(x, y, 35)
   physics.label = id
 
-  const graphics = new PIXI.Graphics()
+  const graphics = new Graphics()
 
   return {
     id,

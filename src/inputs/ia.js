@@ -2,29 +2,25 @@ import { Common, Body, Vector } from 'matter-js'
 import Skill from '../skills/skill'
 import Inputs from './inputs'
 
-const create = (player, { players, pause = false }) => {
+const create = (player, { players }) => {
   const inputs = Object.assign(
     Inputs.create(player, { players }),
     {
-      pause,
       lastxDirection: 0,
       lastyDirection: 0,
       intervals: {
         shield: 0,
         jump: 0,
+        move: 0,
       },
     }
   )
 
   inputs.intervals.shield = setInterval(() => {
-    if (inputs.pause) return
-    Skill.trigger(player.skills.shield)
-  }, 200)
+    inputs.keys.shield = Common.choose([true, false])
+  }, 1000)
 
   inputs.intervals.jump = setInterval(() => {
-    if (inputs.pause) return
-    if (Skill.isCooldown(player.skills.jump)) return
-
     let notJumpChances = 5
     if (
       Math.abs(players[0].physics.position.x - player.physics.position.x) < 200 &&
@@ -33,30 +29,15 @@ const create = (player, { players, pause = false }) => {
       notJumpChances = 1
     }
 
-    if (Common.choose([...Array.from({ length: notJumpChances }).map(() => false), true])) {
-      Skill.trigger(player.skills.jump)
-    }
+    inputs.keys.jump = Common.choose([...Array.from({ length: notJumpChances }).map(() => false), true])
   }, 500)
 
-  return inputs
-}
+  inputs.intervals.move = setInterval(() => {
+    const { player, players, lastxDirection, lastyDirection, keys } = inputs
+    const { skills, physics } = player
 
-const clear = inputs => {
-  const { intervals } = inputs
-  const { shield, jump } = intervals
+    if (Skill.isChanneling(skills.jump)) return
 
-  if (shield) clearInterval(shield)
-  if (jump) clearInterval(jump)
-}
-
-const update = inputs => {
-  if (inputs.pause) return
-
-  const { player, players, lastxDirection, lastyDirection } = inputs
-  const { skills, physics } = player
-  const { jump } = skills
-
-  if (!Skill.isChanneling(jump)) {
     let xDirection = 1
     let yDirection = 1
     if (physics.position.x > players[0].physics.position.x) xDirection = -1
@@ -65,22 +46,28 @@ const update = inputs => {
     inputs.lastxDirection = Common.choose([0, lastxDirection, lastxDirection, lastxDirection, lastxDirection, lastxDirection, xDirection])
     inputs.lastyDirection = Common.choose([0, lastyDirection, lastyDirection, lastyDirection, lastyDirection, lastyDirection, yDirection])
 
-    // looking to deplacement direction
-    player.looking.x = inputs.lastxDirection
-    player.looking.y = inputs.lastyDirection
+    keys.up = (inputs.lastyDirection < 0)
+    keys.down = (inputs.lastyDirection > 0)
+    keys.left = (inputs.lastxDirection < 0)
+    keys.right = (inputs.lastxDirection > 0)
 
-    // TODO: should no mutate this here
-    Body.setVelocity(physics, Vector.mult({ x: inputs.lastxDirection, y: inputs.lastyDirection }, 20))
-  }
+    Skill.trigger(skills.move)
+  }, 10)
+
+  return inputs
 }
 
-const pause = inputs => {
-  inputs.pause = true
+const clear = inputs => {
+  const { intervals } = inputs
+  const { shield, jump, move } = intervals
+
+  if (shield) clearInterval(shield)
+  if (jump) clearInterval(jump)
+  if (move) clearInterval(move)
 }
 
 export default {
   create,
   clear,
-  update,
-  pause,
+  update: Inputs.update,
 }

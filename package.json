@@ -11,6 +11,7 @@
   "author": "Fabien JUIF <fabien.juif@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "lodash-es": "^4.17.10",
     "matter-js": "^0.14.2",
     "pixi-viewport": "^3.2.1",
     "pixi.js": "^4.8.1"

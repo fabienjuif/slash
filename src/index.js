@@ -1,5 +1,5 @@
 import { Text } from 'pixi.js'
-
+import { random } from 'lodash-es'
 import { Engine, World, Body, Events, Pair } from 'matter-js'
 
 import Wall from './sprites/wall'
@@ -21,12 +21,27 @@ const WORLD_SIZE = {
 const player = Player.create('player', { x: WORLD_SIZE.x / 2, y: WORLD_SIZE.y / 2 })
 const enemy = Player.create('enemy', { x: 400, y: 400, color: 0xffff00 })
 
+// walls around the level
 const walls = [
   Wall.create(0, 0, WORLD_SIZE.x, 100), //
   Wall.create(0, 0, 100, WORLD_SIZE.y), //
   Wall.create(WORLD_SIZE.x - 100, 0, 100, WORLD_SIZE.y), //
   Wall.create(0, WORLD_SIZE.y - 100, WORLD_SIZE.x, 100), //
 ]
+
+// wall inside the level
+const WALL_WIDTH = 100
+const maxWallX = WORLD_SIZE.x / WALL_WIDTH
+const maxWallY = WORLD_SIZE.y / WALL_WIDTH
+
+for (let i = 0; i < maxWallX; i += 1) {
+  for (let j = 0; j < maxWallY; j += 1) {
+    if (random(0, 10) === 0) {
+      walls.push(Wall.create(i * WALL_WIDTH, j * WALL_WIDTH, WALL_WIDTH, WALL_WIDTH))
+    }
+  }
+}
+
 
 World.add(engine.world, [player.physics, enemy.physics, ...walls.map(({ physics }) => physics)])
 

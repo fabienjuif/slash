@@ -6,7 +6,6 @@ The goal is to be multiplayer.
  - `npm install`
  - `npm start`
  - go to [http://localhost:3000](http://localhost:3000)
- - open the console to see informations about cooldown, etc
 
 ## Keys
 Default keys are

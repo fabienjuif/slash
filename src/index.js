@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import Viewport from 'pixi-viewport'
 
-import { Engine, World, Body, Vector, Events, Pair } from 'matter-js'
+import { Engine, World, Body, Vector, Events, Pair, Common } from 'matter-js'
 import store from './store/index'
 import wallFactory from './sprites/wall'
 import playerFactory from './sprites/player'
@@ -128,32 +128,33 @@ stage.addChild(viewport)
 //     .wheel()
 
 const graphics = new PIXI.Graphics()
-const playerGraphics = new PIXI.Graphics()
+// const playerGraphics = new PIXI.Graphics()
 viewport.addChild(graphics)
-viewport.addChild(playerGraphics)
+// viewport.addChild(playerGraphics)
 
 const renderPixi = () => {
-  playerGraphics.clear()
   graphics.clear()
 
-  // player
-  if (player.shield >= Date.now()) playerGraphics.beginFill(0xff00ff)
-  if (player.jump >= Date.now()) {
-    playerGraphics.lineStyle(2, 0xffffff)
-  } else {
-    playerGraphics.lineStyle(2, 0xff00ff)
-  }
-  playerGraphics.drawCircle(player.physics.position.x, player.physics.position.y, 40)
-  playerGraphics.endFill()
-  viewport.follow(player.physics.position, { speed: 20, radius: 100 })
+  // viewport
+  viewport.follow(player.physics.position, { speed: 20, radius: 100 });
 
-  // enemy
-  if (!enemy.dead || enemy.dead > Date.now() - 100) {
-    const circleSize = enemy.dead ? (Date.now() - enemy.dead) * 10 : 40
-    graphics.lineStyle(2, 0xffff00)
-    graphics.drawCircle(enemy.physics.position.x, enemy.physics.position.y, circleSize)
+  // players
+  const printPlayer = ({ shield, jump, physics, label, dead }) => {
+    if (dead + 100 <= Date.now()) return
+    const circleSize = dead ? (Date.now() - dead) * 10 : 40
+
+    const color = label === 'player' ? 0xff00ff : 0xffff00
+    if (!dead && shield >= Date.now()) graphics.beginFill(color)
+
+    graphics.lineStyle(2, color)
+    if (jump >= Date.now()) graphics.lineStyle(2, 0xffffff)
+
+    graphics.drawCircle(physics.position.x, physics.position.y, circleSize)
     graphics.endFill()
   }
+
+  printPlayer(player)
+  printPlayer(enemy)
 
   // walls
   walls.forEach(wall => {
@@ -192,7 +193,16 @@ Events.on(engine, 'collisionStart', function(event) {
     const { bodyA, bodyB } = pairs[i]
 
     if (['player', 'enemy'].includes(bodyA.label) && ['player', 'enemy'].includes(bodyB.label)) {
-      if (player.jump >= Date.now()) {
+      if (enemy.jump >= Date.now() && player.shield < Date.now()) {
+        Pair.setActive(pairs[i], false)
+        player.hp -= 50
+        if (player.hp <= 0) {
+          player.dead = Date.now()
+          World.remove(engine.world, player.physics)
+        }
+      }
+
+      if (player.jump >= Date.now() && enemy.shield < Date.now()) {
         Pair.setActive(pairs[i], false)
         enemy.hp -= 50
         if (enemy.hp <= 0) {
@@ -204,6 +214,30 @@ Events.on(engine, 'collisionStart', function(event) {
   }
 })
 
+const ia = () => {
+  setInterval(() => {
+    enemy.shield = Common.choose([enemy.shield, enemy.shield, Date.now() + 100])
+  }, 200)
+
+  setInterval(() => {
+    if (enemy.jump < Date.now() - 1000) { // Cooldown
+      // console.log(distance)
+      let notJumpChances = 5
+      if (
+        Math.abs(enemy.physics.position.x - player.physics.position.x) < 200 &&
+        Math.abs(enemy.physics.position.y - player.physics.position.y) < 200
+      ) notJumpChances = 1
+
+      enemy.jump = Common.choose([...Array.from({ length: notJumpChances }).map(() => enemy.jump), Date.now() + 100])
+    }
+  }, 500)
+}
+
+ia()
+
+let lastxDirection = 0
+let lastyDirection = 0
+
 const loop = () => {
   window.requestAnimationFrame(loop)
 
@@ -212,6 +246,19 @@ const loop = () => {
   look()
   shield()
   if (!jump()) move()
+
+  // ia
+  if (enemy.jump < Date.now()) {
+    let xDirection = 1
+    let yDirection = 1
+    if (enemy.physics.position.x > player.physics.position.x) xDirection = -1
+    if (enemy.physics.position.y > player.physics.position.y) yDirection = -1
+
+    lastxDirection = Common.choose([0, lastxDirection, lastxDirection, lastxDirection, lastxDirection, lastxDirection, xDirection])
+    lastyDirection = Common.choose([0, lastyDirection, lastyDirection, lastyDirection, lastyDirection, lastyDirection, yDirection])
+
+    Body.setVelocity(enemy.physics, Vector.mult({ x: lastxDirection, y: lastyDirection }, 20))
+  }
 
   renderPixi()
 

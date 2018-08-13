@@ -5,6 +5,7 @@ export default (x, y, label) => {
   physics.label = label
 
   return {
+    label,
     graphics: {
       x,
       y,

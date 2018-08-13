@@ -28,7 +28,7 @@ const create = (id, { x, y, color = 0xff00ff }) => {
 
 const update = player => {
   const { physics, skills, looking, moving } = player
-  const { jump, shield } = skills
+  const { jump, shield, dead } = skills
 
   // jump skill block the moving one
   if (Skill.isChanneling(jump)) {
@@ -40,6 +40,7 @@ const update = player => {
   // remove some hp when channeling shield
   if (Skill.isChanneling(shield)) {
     player.hp -= (Date.now() - shield.since) / 1000
+    if (player.hp <= 0) Skill.trigger(dead)
   }
 }
 

@@ -2,6 +2,25 @@ import { Common, Body, Vector } from 'matter-js'
 import Skill from '../skills/skill'
 import Inputs from './inputs'
 
+const clear = inputs => {
+  const { intervals } = inputs
+  const { shield, jump, move, isDead } = intervals
+
+  if (shield) clearInterval(shield)
+  if (jump) clearInterval(jump)
+  if (move) clearInterval(move)
+  if (isDead) clearInterval(isDead)
+
+  inputs.keys = {
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+    shield: false,
+    jump: false,
+  }
+}
+
 const create = (player, { players }) => {
   const inputs = Object.assign(
     Inputs.create(player, { players }),
@@ -15,6 +34,12 @@ const create = (player, { players }) => {
       },
     }
   )
+
+  inputs.intervals.isDead = setInterval(() => {
+    if (Skill.isCooldown(player.skills.dead)) {
+      clear(inputs)
+    }
+  }, 100)
 
   inputs.intervals.shield = setInterval(() => {
     inputs.keys.shield = Common.choose([true, false])
@@ -55,15 +80,6 @@ const create = (player, { players }) => {
   }, 10)
 
   return inputs
-}
-
-const clear = inputs => {
-  const { intervals } = inputs
-  const { shield, jump, move } = intervals
-
-  if (shield) clearInterval(shield)
-  if (jump) clearInterval(jump)
-  if (move) clearInterval(move)
 }
 
 export default {

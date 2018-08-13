@@ -21,6 +21,8 @@ const update = inputs => {
 
   const { up, down, left, right, shield, jump } = keys
 
+  if (Skill.isCooldown(skills.dead)) return
+
   if (jump && !Skill.isChanneling(jump)) {
     Skill.trigger(skills.jump)
     return

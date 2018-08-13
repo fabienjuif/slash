@@ -182,7 +182,7 @@ const ui = () => {
   print.push(`${enemy.hp} E.HP`)
 
   if (lastUI) stage.removeChild(lastUI)
-  lastUI = stage.addChild(new PIXI.Text(print.join(' | '), { fill: 'white' }))
+  lastUI = stage.addChild(new PIXI.Text(print.join(' | '), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))
 }
 
 Events.on(engine, 'collisionStart', function(event) {

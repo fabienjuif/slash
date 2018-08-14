@@ -1,7 +1,11 @@
 import jump from './jump.mp3'
 import shield from './shield.mp3'
 
+let mixer // singleton
+
 const create = () => {
+  if (mixer) return mixer
+
   const sounds = {
     jump: {
       url: jump,
@@ -35,10 +39,12 @@ const create = () => {
     request.send()
   })
 
-  return {
+  mixer = {
     sounds,
     soundContext,
   }
+
+  return mixer
 }
 
 const play = (mixer, name) => {
@@ -59,6 +65,6 @@ const play = (mixer, name) => {
 }
 
 export default {
-  create: () => {},
-  play: () => {},
+  create,
+  play,
 }

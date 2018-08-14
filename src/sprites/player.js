@@ -32,9 +32,9 @@ const update = player => {
 
   // jump skill block the moving one
   if (Skill.isChanneling(jump)) {
-    Body.setVelocity(physics, Vector.mult(looking, 40))
+    Body.setVelocity(physics, Vector.mult(looking, 20))
   } else {
-    Body.setVelocity(physics, Vector.mult(moving, 20))
+    Body.setVelocity(physics, Vector.mult(moving, 10))
   }
 
   // remove some hp when channeling shield

@@ -59,6 +59,6 @@ const play = (mixer, name) => {
 }
 
 export default {
-  create,
-  play,
+  create: () => {},
+  play: () => {},
 }

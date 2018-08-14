@@ -1,6 +1,6 @@
 import { Text } from 'pixi.js'
 import { random } from 'lodash-es'
-import { Engine, World, Body, Events, Pair } from 'matter-js'
+import { Engine, World, Body, Events, Pair, Sleeping } from 'matter-js'
 
 import Wall from './sprites/wall'
 import Player from './sprites/player'
@@ -9,17 +9,22 @@ import IA from './inputs/ia'
 import LocalInputs from './inputs/local'
 import Renderer from './renderer/renderer'
 
+const FAST = false
+
 // create an engine
 var engine = Engine.create()
 engine.world.gravity = { x: 0, y: 0 }
+engine.enableSleeping = true
+// - accuracy needed
+const RUN_ENGINE_PER_LOOP = 2
 
 const WORLD_SIZE = {
-  x: 1600,
-  y: 1200,
+  x: 3200,
+  y: 2400,
 }
 
 const player = Player.create('player', { x: WORLD_SIZE.x / 2, y: WORLD_SIZE.y / 2 })
-const enemy = Player.create('enemy', { x: 400, y: 400, color: 0xffff00 })
+const enemies = Array.from({ length: 10 }).map((_, index) => Player.create(`enemy-${index}`, { x: random(100, WORLD_SIZE.x - 100), y: random(100, WORLD_SIZE.y - 100), color: 0xfffff00 }))
 
 // walls around the level
 const walls = [
@@ -43,20 +48,17 @@ for (let i = 0; i < maxWallX; i += 1) {
 }
 
 
-World.add(engine.world, [player.physics, enemy.physics, ...walls.map(({ physics }) => physics)])
-
-Engine.run(engine)
+World.add(engine.world, [player.physics, ...[...walls, ...enemies].map(({ physics }) => physics)])
 
 const renderer = Renderer.create(window.innerWidth, window.innerHeight, WORLD_SIZE.x, WORLD_SIZE.y, /* { matter: engine } */)
 Renderer.follow(renderer, player)
-Renderer.addToViewport(renderer, player)
-Renderer.addToViewport(renderer, enemy)
-walls.forEach(wall => Renderer.addToViewport(renderer, wall))
+Renderer.addToViewport(renderer, player);
+[...walls, ...enemies].forEach(entity => Renderer.addToViewport(renderer, entity))
 
 // draw walls only once since it doesnt move
 Wall.draw(walls)
 
-const ui = () => {
+const ui = (delta) => {
   const skills = ['jump', 'shield']
   const bindings = localInputs.bindings
 
@@ -69,35 +71,30 @@ const ui = () => {
   })
 
   print.push(`${Math.floor(player.hp)} HP`)
-  print.push(`${Math.floor(enemy.hp)} E.HP`)
 
   if (lastUI) Renderer.removeFromStage(renderer, { graphics: lastUI })
   lastUI = Renderer.addToStage(renderer, { graphics: new Text(print.join(' | '), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }) })
 
   if (lastFPS) Renderer.removeFromStage(renderer, { graphics: lastFPS })
-  var thisLoop = Date.now()
-  const fps = new Text(1000 / (thisLoop - lastLoop), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
+  const fps = new Text(1000 / delta, { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
   fps.position.y = window.innerHeight - 30
   fps.position.x = window.innerWidth - 50
   lastFPS = Renderer.addToStage(renderer, { graphics: fps })
-  lastLoop = thisLoop
 }
 
 // TODO: move it to renderer object
-const renderPixi = () => {
+const renderPixi = (delta) => {
   Player.draw(player)
-  Player.draw(enemy)
+  enemies.forEach(enemy => Player.draw(enemy))
 
-  ui()
+  ui(delta)
 }
 
 let lastUI
 let lastFPS
-var lastLoop = Date.now()
 
-// TODO: clear intervals one game is over or when ia is dead
-const ia = IA.create(enemy, { players: [player] })
-const localInputs = LocalInputs.create(player, { players: [enemy] })
+const iaInputs = enemies.map(enemy => IA.create(enemy, { players: [player] }))
+const localInputs = LocalInputs.create(player, { players: enemies })
 
 Events.on(engine, 'collisionStart', function(event) {
   var pairs = event.pairs
@@ -106,43 +103,64 @@ Events.on(engine, 'collisionStart', function(event) {
   for (var i = 0; i < pairs.length; i++) {
     const { bodyA, bodyB } = pairs[i]
 
-    if (['player', 'enemy'].includes(bodyA.label) && ['player', 'enemy'].includes(bodyB.label)) {
-      if (Skill.isChanneling(enemy.skills.jump) && !Skill.isChanneling(player.skills.shield)) {
-        Pair.setActive(pairs[i], false)
-        player.hp -= 50
-        if (player.hp <= 0) {
-          Skill.trigger(player.skills.dead)
-          World.remove(engine.world, player.physics)
-        }
-      }
+    // if (['player', 'enemy'].includes(bodyA.label) && ['player', 'enemy'].includes(bodyB.label)) {
+    //   if (Skill.isChanneling(enemy.skills.jump) && !Skill.isChanneling(player.skills.shield)) {
+    //     Pair.setActive(pairs[i], false)
+    //     player.hp -= 50
+    //     if (player.hp <= 0) {
+    //       Skill.trigger(player.skills.dead)
+    //       World.remove(engine.world, player.physics)
+    //     }
+    //   }
 
-      if (Skill.isChanneling(player.skills.jump) && !Skill.isChanneling(enemy.skills.shield)) {
-        Pair.setActive(pairs[i], false)
-        enemy.hp -= 50
-        if (enemy.hp <= 0) {
-          Skill.trigger(enemy.skills.dead)
-          World.remove(engine.world, enemy.physics)
-        }
-      }
-    }
+    //   if (Skill.isChanneling(player.skills.jump) && !Skill.isChanneling(enemy.skills.shield)) {
+    //     Pair.setActive(pairs[i], false)
+    //     enemy.hp -= 50
+    //     if (enemy.hp <= 0) {
+    //       Skill.trigger(enemy.skills.dead)
+    //       World.remove(engine.world, enemy.physics)
+    //     }
+    //   }
+    // }
   }
 })
 
+let lastLoop = Date.now()
+const getDelta = () => {
+  const now = Date.now()
+  const delta = now - lastLoop
+
+  lastLoop = now
+
+  return delta
+}
+
 const loop = () => {
-  window.requestAnimationFrame(loop)
+  // loop delta
+  const loopDelta = getDelta()
 
   // update inputs
-  IA.update(ia)
+  iaInputs.forEach(ia => IA.update(ia))
   LocalInputs.update(localInputs)
 
   // update physics
+  Sleeping.set(player.physics, false)
+  // console.log('player sleep', player.physics.isSleeping)
+  engine.world.bodies.forEach(body => Body.setAngle(body, 0))
   Player.update(player)
-  Player.update(enemy)
+  enemies.map(enemy => Player.update(enemy))
+  // - run the engine several times, so we have the feeling the game is fast
+  // - also, this avoid collision detecting issue since CCD is not implemented yet in matter-js
+  for (let i = 0; i < RUN_ENGINE_PER_LOOP; ++i) {
+    Engine.update(engine, getDelta())
+  }
 
   // draw
-  renderPixi()
+  renderPixi(loopDelta)
   Renderer.update(renderer)
 
-  engine.world.bodies.forEach(body => Body.setAngle(body, 0))
+  // register next loop
+  if (!FAST) window.requestAnimationFrame(loop)
 }
-loop()
+if (FAST) interval = setInterval(loop, 0)
+else window.requestAnimationFrame(loop)

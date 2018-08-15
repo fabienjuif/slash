@@ -5,9 +5,6 @@ const collides = (physics, pair, entityA, entityB) => {
   // if other entity is not a player, it does nothing
   if (entityB.type !== 'player') return
 
-
-  console.log('HIT HIM')
-
   // entityA is the slasher
   if (Skill.isChanneling(entityA.skills.jump) && !Skill.isChanneling(entityB.skills.shield)) {
     // inactive so both bodies can pass through

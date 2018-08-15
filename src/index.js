@@ -9,7 +9,9 @@ import Skill from './skills/skill'
 import IA from './inputs/ia'
 import LocalInputs from './inputs/local'
 
-const FAST = false
+const TEST_PERF = false
+const FAST = false || TEST_PERF
+const PIXI = true
 
 const physics = Physics.create()
 
@@ -46,7 +48,7 @@ Physics.add(physics, player)
 Physics.add(physics, enemies)
 Physics.add(physics, walls)
 
-const renderer = Renderer.create(window.innerWidth, window.innerHeight, WORLD_SIZE.x, WORLD_SIZE.y, /* { matter: engine } */)
+const renderer = Renderer.create(window.innerWidth, window.innerHeight, WORLD_SIZE.x, WORLD_SIZE.y, { matter: PIXI ? undefined : physics.engine })
 Renderer.follow(renderer, player)
 Renderer.addToViewport(renderer, player);
 [...walls, ...enemies].forEach(entity => Renderer.addToViewport(renderer, entity))
@@ -102,7 +104,19 @@ const getDelta = () => {
   return delta
 }
 
+let nbLoops = 0
+const start = Date.now()
 const loop = () => {
+  if (TEST_PERF) {
+    if (nbLoops > 1000) {
+      const duration = Date.now() - start
+      window.alert(`${nbLoops} loops in ${duration}ms => ${duration / nbLoops} ms per loop`)
+      return
+    }
+
+    nbLoops++
+  }
+
   // loop delta
   const loopDelta = getDelta()
 
@@ -118,7 +132,8 @@ const loop = () => {
   Renderer.update(renderer)
 
   // register next loop
-  if (!FAST) window.requestAnimationFrame(loop)
+  if (FAST) setTimeout(loop, 0)
+  else window.requestAnimationFrame(loop)
 }
-if (FAST) interval = setInterval(loop, 0)
+if (FAST) setTimeout(loop, 0)
 else window.requestAnimationFrame(loop)

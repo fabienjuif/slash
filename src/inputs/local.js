@@ -9,8 +9,8 @@ const defaultBindings = {
   down: 40, // bottom arrow
 }
 
-const create = (player, { players, bindings = defaultBindings }) => {
-  const inputs = Inputs.create(player, { players })
+const create = (entity, { game, bindings = defaultBindings }) => {
+  const inputs = Inputs.create(entity, { game })
 
   const entries = Object.entries(bindings)
 

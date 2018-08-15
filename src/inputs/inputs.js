@@ -1,9 +1,9 @@
 import Skill from '../skills/skill'
 
-const create = (player, { players }) => {
+const create = (entity, { game }) => {
   return {
-    player,
-    players,
+    entity,
+    game,
     keys: {
       up: false,
       down: false,
@@ -16,8 +16,8 @@ const create = (player, { players }) => {
 }
 
 const update = inputs => {
-  const { player, keys } = inputs
-  const { skills } = player
+  const { entity, keys } = inputs
+  const { skills } = entity
 
   const { up, down, left, right, shield, jump } = keys
 
@@ -39,10 +39,10 @@ const update = inputs => {
   if (!right && !left) x = 0
 
   // looking to deplacement direction
-  player.moving.x = x
-  player.moving.y = y
-  player.looking.x = x
-  player.looking.y = y
+  entity.moving.x = x
+  entity.moving.y = y
+  entity.looking.x = x
+  entity.looking.y = y
 
   Skill.trigger(skills.move)
 

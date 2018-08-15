@@ -15,13 +15,14 @@ const clear = (inputs) => {
   inputs.cleared = true
 }
 
-const create = (player, { players }) => {
+const create = (entity, { game }) => {
   const inputs = Object.assign(
-    Inputs.create(player, { players }),
+    Inputs.create(entity, { game }),
     {
       lastxDirection: 0,
       lastyDirection: 0,
       cleared: false,
+      player: game.entities.find(entity => entity.id === 'player')
     }
   )
 
@@ -29,16 +30,17 @@ const create = (player, { players }) => {
 }
 
 const update = (inputs) => {
-  const { player, players, lastxDirection, lastyDirection, keys, cleared } = inputs
-  const { skills, body } = player
+  const { entity, player, lastxDirection, lastyDirection, keys, cleared } = inputs
+  const { skills, body } = entity
 
   // dead -> clear all
   if (!cleared && Skill.isCooldown(skills.dead)) clear(inputs)
 
   // helper
+
   const isPlayerClose = (
-    Math.abs(players[0].body.position.x - player.body.position.x) < 200 &&
-    Math.abs(players[0].body.position.y - player.body.position.y) < 200
+    Math.abs(player.body.position.x - entity.body.position.x) < 200 &&
+    Math.abs(player.body.position.y - entity.body.position.y) < 200
   )
 
   // try to jump (TODO: use lodash random)
@@ -50,8 +52,8 @@ const update = (inputs) => {
   // move
   let xDirection = 1
   let yDirection = 1
-  if (body.position.x > players[0].body.position.x) xDirection = -1
-  if (body.position.y > players[0].body.position.y) yDirection = -1
+  if (body.position.x > player.body.position.x) xDirection = -1
+  if (body.position.y > player.body.position.y) yDirection = -1
 
   inputs.lastxDirection = Common.choose([0, lastxDirection, lastxDirection, lastxDirection, lastxDirection, lastxDirection, xDirection])
   inputs.lastyDirection = Common.choose([0, lastyDirection, lastyDirection, lastyDirection, lastyDirection, lastyDirection, yDirection])

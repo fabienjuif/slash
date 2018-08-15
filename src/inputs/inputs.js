@@ -11,14 +11,14 @@ const create = (entity, { game }) => {
       right: false,
       shield: false,
       jump: false,
+      enter: false,
     },
   }
 }
 
-const update = inputs => {
+const update = (inputs) => {
   const { entity, keys } = inputs
   const { skills } = entity
-
   const { up, down, left, right, shield, jump } = keys
 
   if (Skill.isCooldown(skills.dead)) return

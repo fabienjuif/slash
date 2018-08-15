@@ -13,6 +13,7 @@ const worldSize = {
 }
 
 const renderer = Renderer.create(window.innerWidth, window.innerHeight, worldSize.x, worldSize.y, { matter: PIXI ? undefined : physics.engine })
+
 const states = {
   game: Game.create(renderer, { worldSize }),
   gameover: Gameover.create(renderer),
@@ -42,9 +43,8 @@ const loop = () => {
 
   // prepare next state
   if (previousState !== state) {
+    states[state] = State.prepare(states[state], states[previousState])
     previousState = state
-
-    State.prepare(states[state])
   }
 
   // update current state

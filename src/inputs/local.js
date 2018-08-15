@@ -7,6 +7,7 @@ const defaultBindings = {
   right: 39, // right arrow
   up: 38, // top arrow
   down: 40, // bottom arrow
+  enter: 13, // enter key
 }
 
 const create = (entity, { game, bindings = defaultBindings }) => {
@@ -22,20 +23,25 @@ const create = (entity, { game, bindings = defaultBindings }) => {
     inputs.keys[key] = type === 'keydown'
   }
 
-  // TODO: clear them
   window.addEventListener('keydown', reactKey)
   window.addEventListener('keyup', reactKey)
 
   return Object.assign(
     inputs,
+    reactKey,
     {
       bindings,
     },
   )
 }
 
+const clear = (inputs) => {
+  window.removeEventListener('keydown', inputs.reactKey)
+  window.removeEventListener('keyup', inputs.reactKey)
+}
+
 export default {
   create,
-  clear: () => {},
+  clear,
   update: Inputs.update,
 }

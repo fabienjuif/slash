@@ -3,13 +3,45 @@ import Viewport from 'pixi-viewport'
 import { Render } from 'matter-js'
 import Entity from '../entities/entity'
 
+const reset = (renderer) => {
+  const {
+    worldWidth,
+    worldHeight,
+    width,
+    height,
+  } = renderer
+
+  renderer.followed = false
+  renderer.stage = new Container()
+  renderer.viewport = new Viewport({
+    screenWidth: width,
+    screenHeight: height,
+    worldWidth,
+    worldHeight,
+  })
+  renderer.stage.addChild(renderer.viewport)
+}
+
 const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = false } = {}) => {
   let renderer
   let viewport
   let stage
 
+  const innerRenderer = {
+    follow: undefined,
+    followed: false,
+    entities: [],
+    viewport,
+    stage,
+    matter,
+    worldWidth,
+    worldHeight,
+    width: screenWidth,
+    height: screenHeight,
+  }
+
   if (matter) {
-    renderer = Render.create({
+    innerRenderer.renderer = Render.create({
       element: document.body,
       engine: matter,
       options: {
@@ -32,31 +64,15 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
 
     Render.run(renderer)
   } else {
-    renderer = autoDetectRenderer(screenWidth, screenHeight, {
+    innerRenderer.renderer = autoDetectRenderer(screenWidth, screenHeight, {
       backgroundColor: 0x000000,
     })
-    stage = new Container()
-    document.body.appendChild(renderer.view)
-    viewport = new Viewport({
-      screenWidth,
-      screenHeight,
-      worldWidth,
-      worldHeight,
-    })
-    stage.addChild(viewport)
+    document.body.appendChild(innerRenderer.renderer.view)
+
+    reset(innerRenderer)
   }
 
-  return {
-    follow: undefined,
-    followed: false,
-    entities: [],
-    renderer,
-    viewport,
-    stage,
-    matter,
-    width: screenWidth,
-    height: screenHeight,
-  }
+  return innerRenderer
 }
 
 const update = (renderer) => {
@@ -110,5 +126,6 @@ export default {
   update,
   addToStage,
   addToViewport,
-  follow
+  follow,
+  reset,
 }

@@ -13,22 +13,10 @@ const WALL_WIDTH = 100
 
 const add = (state, entities) => {
   const { physics } = state
-  const asArray = [].concat(entities)
 
   Physics.add(physics, entities)
 
   state.entities = state.entities.concat(entities)
-
-  // bind inputs
-  asArray.forEach((entity) => {
-    if (!entity.type === 'player') return
-
-    if (entity.id === 'ia') {
-      state.inputs.ia.push(IA.create(entity, { game: state })) // TODO: impact ia
-    } else if (entity.id === 'player') {
-      state.inputs.player = LocalInputs.create(entity, { game: state }) // TODO: impact localinputs
-    }
-  })
 
   return entities
 }
@@ -38,15 +26,18 @@ const create = (renderer, { worldSize }) => {
 
   const state = State.create('game', { renderer, physics })
   state.inputs.ia = []
+  state.worldSize = worldSize
 
   // add ui
   state.ui = new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
 
-  // add entities
+  // add entities (TODO:move this to prepare)
   // - player
   state.player = add(state, Player.create('player', { x: worldSize.x / 2, y: worldSize.y / 2 }))
+  state.inputs.player = LocalInputs.create(state.player, { game: state })
   // - enemies
-  add(state, Array.from({ length: 2 }).map(() => Player.create('ia', { x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
+  const ias = add(state, Array.from({ length: 2 }).map(() => Player.create('ia', { x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
+  ias.forEach(ia => state.inputs.ia.push(IA.create(ia, { game: state })))
   // - walls around the level
   add(state, Wall.create(0, 0, worldSize.x, WALL_WIDTH))
   add(state, Wall.create(0, 0, WALL_WIDTH, worldSize.y))
@@ -65,12 +56,20 @@ const create = (renderer, { worldSize }) => {
 }
 
 const prepare = (state) => {
-  const { player, entities, renderer, ui } = state
+  // clear old objects
+  LocalInputs.clear(state.inputs.player)
+
+  // recreate a world
+  const newState = create(state.renderer, { worldSize: state.worldSize })
+
+  const { player, entities, ui, renderer } = newState
 
   Renderer.addToStage(renderer, { graphics: renderer.viewport })
   Renderer.follow(renderer, player)
   Renderer.addToStage(renderer, { graphics: ui })
   Renderer.addToViewport(renderer, entities)
+
+  return newState
 }
 
 const update = (state, delta) => {

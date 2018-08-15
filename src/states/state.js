@@ -41,18 +41,18 @@ const update = (state, delta) => {
   return newState
 }
 
-const prepare = (state) => {
+const prepare = (state, previous) => {
   const { id, renderer, fps } = state
 
-  // create a new state
-  renderer.stage = new Container()
+  // reset rendrer
+  Renderer.reset(renderer)
 
   // add to stage
   Renderer.addToStage(renderer, { graphics: fps })
 
   // call other prepare
-  if (id === 'game') Game.prepare(state)
-  else if (id === 'gameover') Gameover.prepare(state)
+  if (id === 'game') return Game.prepare(state, previous)
+  else if (id === 'gameover') return Gameover.prepare(state, previous)
 }
 
 export default {

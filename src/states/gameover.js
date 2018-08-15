@@ -10,13 +10,22 @@ const create = (renderer) => {
   return state
 }
 
-const prepare = (state) => {
+const prepare = (state, previous) => {
   const { ui, renderer } = state
+  const { inputs } = previous
+  state.inputs = inputs.player
 
   Renderer.addToStage(renderer, { graphics: ui })
+
+  return state
 }
 
-const update = () => {}
+const update = (state) => {
+  const { inputs } = state
+
+  if (inputs.keys.enter) return 'game'
+  return 'gameover'
+}
 
 export default {
   create,

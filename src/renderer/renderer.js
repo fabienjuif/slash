@@ -1,6 +1,7 @@
 import { Container, autoDetectRenderer } from 'pixi.js'
 import Viewport from 'pixi-viewport'
 import { Render } from 'matter-js'
+import Entity from '../entities/entity'
 
 const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = false } = {}) => {
   let renderer
@@ -47,6 +48,7 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
 
   return {
     follow: undefined,
+    entities: [],
     renderer,
     viewport,
     stage,
@@ -56,46 +58,48 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
   }
 }
 
-const update = renderer => {
-  const { matter, follow } = renderer
+const update = (renderer) => {
+  const { matter, follow, entities } = renderer
 
   if (matter) {
     if (follow) {
       Render.lookAt(renderer.renderer, follow.body, { x: 500, y: 500 })
     }
   } else {
+    entities.forEach(Entity.draw)
     renderer.renderer.render(renderer.stage)
   }
 }
 
-const addToViewport = (renderer, object) => {
+const add = (renderer, entities) => {
+  renderer.entities = renderer.entities.concat(entities)
+}
+
+const addToViewport = (renderer, entities) => {
   const { matter, viewport } = renderer
   if (matter) return
 
-  return viewport.addChild(object.graphics)
+  add(renderer, entities)
+
+  return [].concat(entities).map(entity => viewport.addChild(entity.graphics))
 }
 
-const addToStage = (renderer, object) => {
+const addToStage = (renderer, entities) => {
   const { matter, stage } = renderer
   if (matter) return
 
-  return stage.addChild(object.graphics)
+  add(renderer, entities)
+
+  return [].concat(entities).map(entity => stage.addChild(entity.graphics))
 }
 
-const removeFromStage = (renderer, object) => {
-  const { matter, stage } = renderer
-  if (matter) return
-
-  return stage.removeChild(object.graphics)
-}
-
-const follow = (renderer, object) => {
+const follow = (renderer, entity) => {
   const { matter, viewport } = renderer
 
-  renderer.follow = object
+  renderer.follow = entity
 
   if (!matter) {
-    viewport.follow(object.body.position, { speed: 20, radius: 100 })
+    viewport.follow(entity.body.position, { speed: 20, radius: 100 })
   }
 }
 
@@ -103,7 +107,6 @@ export default {
   create,
   update,
   addToStage,
-  removeFromStage,
   addToViewport,
   follow
 }

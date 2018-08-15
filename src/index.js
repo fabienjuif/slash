@@ -49,12 +49,19 @@ Physics.add(physics, enemies)
 Physics.add(physics, walls)
 
 const renderer = Renderer.create(window.innerWidth, window.innerHeight, WORLD_SIZE.x, WORLD_SIZE.y, { matter: PIXI ? undefined : physics.engine })
-Renderer.follow(renderer, player)
-Renderer.addToViewport(renderer, player);
-[...walls, ...enemies].forEach(entity => Renderer.addToViewport(renderer, entity))
 
-// draw walls only once since it doesnt move
-Wall.draw(walls)
+Renderer.follow(renderer, player)
+
+Renderer.addToViewport(renderer, player)
+Renderer.addToViewport(renderer, enemies)
+Renderer.addToViewport(renderer, walls)
+
+const skillsText = new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
+Renderer.addToStage(renderer, { graphics: skillsText })
+const fpsText = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
+fpsText.position.y = window.innerHeight - 30
+fpsText.position.x = window.innerWidth - 50
+Renderer.addToStage(renderer, { graphics: fpsText })
 
 const ui = (delta) => {
   const skills = ['jump', 'shield']
@@ -70,26 +77,9 @@ const ui = (delta) => {
 
   print.push(`${Math.floor(player.hp)} HP`)
 
-  if (lastUI) Renderer.removeFromStage(renderer, { graphics: lastUI })
-  lastUI = Renderer.addToStage(renderer, { graphics: new Text(print.join(' | '), { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }) })
-
-  if (lastFPS) Renderer.removeFromStage(renderer, { graphics: lastFPS })
-  const fps = new Text(1000 / delta, { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  fps.position.y = window.innerHeight - 30
-  fps.position.x = window.innerWidth - 50
-  lastFPS = Renderer.addToStage(renderer, { graphics: fps })
+  skillsText.text = print.join(' | ')
+  fpsText.text = (1000 / delta)
 }
-
-// TODO: move it to renderer object
-const renderPixi = (delta) => {
-  Player.draw(player)
-  enemies.forEach(enemy => Player.draw(enemy))
-
-  ui(delta)
-}
-
-let lastUI
-let lastFPS
 
 const iaInputs = enemies.map(enemy => IA.create(enemy, { players: [player] }))
 const localInputs = LocalInputs.create(player, { players: enemies })
@@ -128,7 +118,7 @@ const loop = () => {
   Physics.update(physics, delta)
 
   // draw
-  renderPixi(delta)
+  ui(delta)
   Renderer.update(renderer)
 
   // register next loop

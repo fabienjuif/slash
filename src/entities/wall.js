@@ -13,23 +13,23 @@ const create = (x, y, width, height) => {
       y,
       width,
       height,
+      drew: false,
     },
   )
 }
 
-const drawOne = wall => {
-  const { x, y, width, height, graphics } = wall
+const draw = (wall) => {
+  const { x, y, width, height, graphics, drew } = wall
+
+  // already drew once ? Then this is enough since wall are statics
+  if (drew) return
+  wall.drew = true
 
   graphics.clear()
   graphics.lineStyle(0, 0xff00ff)
   graphics.beginFill(0x00ffff)
   graphics.drawRect(x, y, width, height)
   graphics.endFill()
-}
-
-const draw = walls => {
-  if (Array.isArray(walls)) return walls.forEach(wall => drawOne(wall))
-  return drawOne(wall)
 }
 
 export default {

@@ -1,4 +1,5 @@
 import Player from './player'
+import Wall from './wall'
 
 const create = (type, { graphics, body } = {}) => {
   const entity = {
@@ -22,9 +23,15 @@ const collides = (physics, pair, entityA, entityB) => {
   // we don't need to handle wall collision
 }
 
+const draw = (entity) => {
+  if (entity.type === 'player') Player.draw(entity)
+  else if (entity.type === 'wall') Wall.draw(entity)
+}
+
 export default {
   create,
   update,
+  draw,
   collides: (physics, pair, entityA, entityB) => {
     collides(physics, pair, entityA, entityB)
     collides(physics, pair, entityB, entityA)

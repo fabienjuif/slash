@@ -1,6 +1,4 @@
 import { Engine, World, Body, Events } from 'matter-js'
-
-import Colliders from './colliders/collider'
 import Entity from '../entities/entity'
 
 const create = () => {
@@ -22,7 +20,7 @@ const create = () => {
     for (var i = 0; i < pairs.length; i++) {
       const { bodyA, bodyB } = pairs[i]
 
-      Colliders.collides(physics, pairs[i], bodyA.entity, bodyB.entity)
+      Entity.collides(physics, pairs[i], bodyA.entity, bodyB.entity)
     }
   })
 

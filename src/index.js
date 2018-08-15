@@ -118,17 +118,17 @@ const loop = () => {
   }
 
   // loop delta
-  const loopDelta = getDelta()
+  const delta = getDelta()
 
   // update inputs
   iaInputs.forEach(ia => IA.update(ia))
   LocalInputs.update(localInputs)
 
   // update physics
-  Physics.update(physics, loopDelta)
+  Physics.update(physics, delta)
 
   // draw
-  renderPixi(loopDelta)
+  renderPixi(delta)
   Renderer.update(renderer)
 
   // register next loop

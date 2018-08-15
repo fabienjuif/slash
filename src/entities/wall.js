@@ -32,10 +32,7 @@ const draw = walls => {
   return drawOne(wall)
 }
 
-const update = () => {}
-
 export default {
   create,
   draw,
-  update,
 }

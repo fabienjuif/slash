@@ -1,33 +1,30 @@
 import { Graphics } from 'pixi.js'
 import { Bodies, Body, Vector } from 'matter-js'
+import Entity from './entity'
 import Skill from '../skills/skill'
 
 const create = (id, { x, y, color = 0xff00ff }) => {
   const physics = Bodies.circle(x, y, 35)
-  physics.label = id
-
   const graphics = new Graphics()
 
-  const player = {
-    id,
-    label: id,
-    graphics,
-    physics,
-    color,
-    looking: { x: 1, y: 0 },
-    moving: { x: 0, y: 0 },
-    hp: 100,
-    skills: {
-      jump: Skill.create('jump', { cooldown: 1000, last: 100 }),
-      shield: Skill.create('shield', { cooldown: 90, last: 100 }),
-      move: Skill.create('move', { cooldown: 0, last: Infinity }),
-      dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
-    },
+  const skills = {
+    jump: Skill.create('jump', { cooldown: 1000, last: 100 }),
+    shield: Skill.create('shield', { cooldown: 90, last: 100 }),
+    move: Skill.create('move', { cooldown: 0, last: Infinity }),
+    dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
   }
 
-  physics.player = player
-
-  return player
+  return Object.assign(
+    Entity.create('player', { graphics, physics }),
+    {
+      id,
+      color,
+      looking: { x: 1, y: 0 },
+      moving: { x: 0, y: 0 },
+      hp: 100,
+      skills,
+    },
+  )
 }
 
 const update = player => {

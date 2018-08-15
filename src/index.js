@@ -1,22 +1,17 @@
 import { Text } from 'pixi.js'
 import { random } from 'lodash-es'
-import { Engine, World, Body, Events, Pair, Sleeping } from 'matter-js'
 
-import Wall from './sprites/wall'
-import Player from './sprites/player'
+import Physics from './physics/physics'
+import Renderer from './renderer/renderer'
+import Wall from './entities/wall'
+import Player from './entities/player'
 import Skill from './skills/skill'
 import IA from './inputs/ia'
 import LocalInputs from './inputs/local'
-import Renderer from './renderer/renderer'
 
 const FAST = false
 
-// create an engine
-var engine = Engine.create()
-engine.world.gravity = { x: 0, y: 0 }
-engine.enableSleeping = true
-// - accuracy needed
-const RUN_ENGINE_PER_LOOP = 2
+const physics = Physics.create()
 
 const WORLD_SIZE = {
   x: 3200,
@@ -47,8 +42,9 @@ for (let i = 0; i < maxWallX; i += 1) {
   }
 }
 
-
-World.add(engine.world, [player.physics, ...[...walls, ...enemies].map(({ physics }) => physics)])
+Physics.add(physics, player)
+Physics.add(physics, enemies)
+Physics.add(physics, walls)
 
 const renderer = Renderer.create(window.innerWidth, window.innerHeight, WORLD_SIZE.x, WORLD_SIZE.y, /* { matter: engine } */)
 Renderer.follow(renderer, player)
@@ -96,37 +92,6 @@ let lastFPS
 const iaInputs = enemies.map(enemy => IA.create(enemy, { players: [player] }))
 const localInputs = LocalInputs.create(player, { players: enemies })
 
-Events.on(engine, 'collisionStart', function(event) {
-  var pairs = event.pairs
-
-  for (var i = 0; i < pairs.length; i++) {
-    const { bodyA, bodyB } = pairs[i]
-
-    if (bodyA.player && bodyB.player) {
-      const damage = (first, second) => { // TODO: move it to player/sprites (with previous condition ?)
-        if (Skill.isChanneling(first.player.skills.jump) && !Skill.isChanneling(second.player.skills.jump)) {
-          // inactive so both bodies can pass through
-          Pair.setActive(pairs[i], false)
-
-          // retrieve some HP and death ?
-          second.player.hp -= 20 // TODO: get it from meta skill ?
-          if (second.player.hp <= 0) {
-            Skill.trigger(second.player.skills.dead)
-            World.remove(engine.world, second)
-          }
-
-          // someone that sucessfully touch an other player get a jump that last longer
-          // FIXME: don't mutate object
-          first.player.skills.jump.until += 100
-        }
-      }
-
-      damage(bodyA, bodyB)
-      damage(bodyB, bodyA)
-    }
-  }
-})
-
 let lastLoop = Date.now()
 const getDelta = () => {
   const now = Date.now()
@@ -146,16 +111,7 @@ const loop = () => {
   LocalInputs.update(localInputs)
 
   // update physics
-  Sleeping.set(player.physics, false)
-  // console.log('player sleep', player.physics.isSleeping)
-  engine.world.bodies.forEach(body => Body.setAngle(body, 0))
-  Player.update(player)
-  enemies.map(enemy => Player.update(enemy))
-  // - run the engine several times, so we have the feeling the game is fast
-  // - also, this avoid collision detecting issue since CCD is not implemented yet in matter-js
-  for (let i = 0; i < RUN_ENGINE_PER_LOOP; ++i) {
-    Engine.update(engine, getDelta())
-  }
+  Physics.update(physics, loopDelta)
 
   // draw
   renderPixi(loopDelta)

@@ -1,22 +1,18 @@
 import { Container, Text } from 'pixi.js'
 import Renderer from '../renderer/renderer'
 import Game from './game'
+import Gameover from './gameover'
 
 const create = (id, { renderer, physics, viewport }) => {
-  const stage = new Container()
-
   const fps = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
   fps.position.y = window.innerHeight - 30
   fps.position.x = window.innerWidth - 50
-
-  Renderer.addToStage(renderer, { graphics: fps })
 
   return {
     id,
     renderer,
     physics,
     viewport, // TODO: remove this ?
-    stage, // TODO: renderer should use this stage (1 stage par state)
     fps,
     inputs: {},
     lastFPS: [],
@@ -25,7 +21,7 @@ const create = (id, { renderer, physics, viewport }) => {
 }
 
 const update = (state, delta) => {
-  const { fps, lastFPS, renderer } = state
+  const { id, fps, lastFPS, renderer } = state
 
   // update fps
   lastFPS.push(1000 / delta)
@@ -35,13 +31,32 @@ const update = (state, delta) => {
   }
 
   // update scene based on state
-  if (state.id === 'game') Game.update(state, delta)
+  let newState
+  if (id === 'game') newState = Game.update(state, delta)
+  else if (id === 'gameover') newState = Gameover.update(state, delta)
 
   // draw
   Renderer.update(renderer)
+
+  return newState
+}
+
+const prepare = (state) => {
+  const { id, renderer, fps } = state
+
+  // create a new state
+  renderer.stage = new Container()
+
+  // add to stage
+  Renderer.addToStage(renderer, { graphics: fps })
+
+  // call other prepare
+  if (id === 'game') Game.prepare(state)
+  else if (id === 'gameover') Gameover.prepare(state)
 }
 
 export default {
   create,
+  prepare,
   update,
 }

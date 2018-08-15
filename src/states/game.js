@@ -12,11 +12,10 @@ import State from './state'
 const WALL_WIDTH = 100
 
 const add = (state, entities) => {
-  const { physics, renderer } = state
+  const { physics } = state
   const asArray = [].concat(entities)
 
   Physics.add(physics, entities)
-  Renderer.addToViewport(renderer, entities)
 
   state.entities = state.entities.concat(entities)
 
@@ -41,9 +40,7 @@ const create = (renderer, { worldSize }) => {
   state.inputs.ia = []
 
   // add ui
-  const ui = new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  state.ui = ui
-  Renderer.addToStage(renderer, { graphics: ui }) // TODO: renderer should use state stage (1 stage par state)
+  state.ui = new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
 
   // add entities
   // - player
@@ -64,14 +61,20 @@ const create = (renderer, { worldSize }) => {
     }
   }
 
-  // viewport will follow the player
-  Renderer.follow(renderer, state.player)
-
   return state
 }
 
+const prepare = (state) => {
+  const { player, entities, renderer, ui } = state
+
+  Renderer.addToStage(renderer, { graphics: renderer.viewport })
+  Renderer.follow(renderer, player)
+  Renderer.addToStage(renderer, { graphics: ui })
+  Renderer.addToViewport(renderer, entities)
+}
+
 const update = (state, delta) => {
-  const { physics, inputs, player } = state
+  const { physics, inputs, player, entities } = state
 
   // update inputs
   inputs.ia.forEach(IA.update)
@@ -88,10 +91,15 @@ const update = (state, delta) => {
   })
   print.push(`${Math.floor(player.hp)} HP`)
   state.ui.text = print.join(' | ')
+
+  // is it gameover ?
+  if (player.hp <= 0) return 'gameover'
+  if (entities.filter(entity => entity.type === 'player' && entity.hp > 0).length > 1) return 'game'
+  return 'gameover'
 }
 
 export default {
   create,
+  prepare,
   update,
-  add,
 }

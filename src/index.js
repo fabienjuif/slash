@@ -1,5 +1,6 @@
 import Renderer from './renderer/renderer'
 import Game from './states/game'
+import Gameover from './states/gameover'
 import State from './states/state'
 
 const TEST_PERF = false
@@ -14,10 +15,11 @@ const worldSize = {
 const renderer = Renderer.create(window.innerWidth, window.innerHeight, worldSize.x, worldSize.y, { matter: PIXI ? undefined : physics.engine })
 const states = {
   game: Game.create(renderer, { worldSize }),
+  gameover: Gameover.create(renderer),
   // TODO: start
-  // TODO: gameover
 }
 
+let previousState
 let state = 'game'
 let lastLoop = Date.now()
 let nbLoops = 0
@@ -38,8 +40,15 @@ const loop = () => {
   const delta = now - lastLoop
   lastLoop = now
 
+  // prepare next state
+  if (previousState !== state) {
+    previousState = state
+
+    State.prepare(states[state])
+  }
+
   // update current state
-  State.update(states[state], delta)
+  state = State.update(states[state], delta) || state
 
   // register next loop
   if (FAST) setTimeout(loop, 0)

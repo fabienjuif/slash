@@ -31,7 +31,7 @@ const create = () => {
 
 const add = (physics, entities) => {
   physics.entities = physics.entities.concat(entities)
-  World.add(physics.world, [].concat(entities).map(entity => entity.physics))
+  World.add(physics.world, [].concat(entities).map(entity => entity.body))
 }
 
 const update = (physics, delta) => {
@@ -39,7 +39,7 @@ const update = (physics, delta) => {
   for (let i = 0; i < physics.entities.length; i+= 1) {
     const entity = physics.entities[i]
 
-    Body.setAngle(entity.physics, 0) // FIXME: look at friction, etc on bodies to avoid them to turn instead of doing this
+    Body.setAngle(entity.body, 0) // FIXME: look at friction, etc on bodies to avoid them to turn instead of doing this
     Entity.update(entity)
   }
 

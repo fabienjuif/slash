@@ -3,11 +3,11 @@ import { Bodies } from 'matter-js'
 import Entity from './entity'
 
 const create = (x, y, width, height) => {
-  const physics = Bodies.rectangle(x + width / 2, y + height / 2, width, height, { isStatic: true })
+  const body = Bodies.rectangle(x + width / 2, y + height / 2, width, height, { isStatic: true })
   const graphics = new Graphics()
 
   return Object.assign(
-    Entity.create('wall', { graphics, physics }),
+    Entity.create('wall', { graphics, body }),
     {
       x,
       y,

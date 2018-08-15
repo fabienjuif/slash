@@ -30,15 +30,15 @@ const create = (player, { players }) => {
 
 const update = (inputs) => {
   const { player, players, lastxDirection, lastyDirection, keys, cleared } = inputs
-  const { skills, physics } = player
+  const { skills, body } = player
 
   // dead -> clear all
   if (!cleared && Skill.isCooldown(skills.dead)) clear(inputs)
 
   // helper
   const isPlayerClose = (
-    Math.abs(players[0].physics.position.x - player.physics.position.x) < 200 &&
-    Math.abs(players[0].physics.position.y - player.physics.position.y) < 200
+    Math.abs(players[0].body.position.x - player.body.position.x) < 200 &&
+    Math.abs(players[0].body.position.y - player.body.position.y) < 200
   )
 
   // try to jump (TODO: use lodash random)
@@ -50,8 +50,8 @@ const update = (inputs) => {
   // move
   let xDirection = 1
   let yDirection = 1
-  if (physics.position.x > players[0].physics.position.x) xDirection = -1
-  if (physics.position.y > players[0].physics.position.y) yDirection = -1
+  if (body.position.x > players[0].body.position.x) xDirection = -1
+  if (body.position.y > players[0].body.position.y) yDirection = -1
 
   inputs.lastxDirection = Common.choose([0, lastxDirection, lastxDirection, lastxDirection, lastxDirection, lastxDirection, xDirection])
   inputs.lastyDirection = Common.choose([0, lastyDirection, lastyDirection, lastyDirection, lastyDirection, lastyDirection, yDirection])

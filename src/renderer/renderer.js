@@ -61,7 +61,7 @@ const update = renderer => {
 
   if (matter) {
     if (follow) {
-      Render.lookAt(renderer.renderer, follow.physics, { x: 500, y: 500 })
+      Render.lookAt(renderer.renderer, follow.body, { x: 500, y: 500 })
     }
   } else {
     renderer.renderer.render(renderer.stage)
@@ -95,7 +95,7 @@ const follow = (renderer, object) => {
   renderer.follow = object
 
   if (!matter) {
-    viewport.follow(object.physics.position, { speed: 20, radius: 100 })
+    viewport.follow(object.body.position, { speed: 20, radius: 100 })
   }
 }
 

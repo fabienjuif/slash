@@ -1,13 +1,13 @@
 import Player from './player'
 
-const create = (type, { graphics, physics } = {}) => {
+const create = (type, { graphics, body } = {}) => {
   const entity = {
     type,
-    physics,
+    body,
     graphics,
   }
 
-  if (physics) physics.entity = entity
+  if (body) body.entity = entity
 
   return entity
 }

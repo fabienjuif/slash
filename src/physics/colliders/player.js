@@ -20,7 +20,7 @@ const collides = (physics, pair, entityA, entityB) => {
     entityA.hp -= 20 // FIXME: don't mutate object
     if (entityA.hp <= 0) {
       Skill.trigger(entityA.skills.dead)
-      World.remove(physics.engine.world, entityA.physics)
+      World.remove(physics.engine.world, entityA.body)
     }
   }
 }

@@ -22,16 +22,27 @@ const add = (state, entities) => {
 }
 
 const create = (renderer, { worldSize }) => {
-  const physics = Physics.create()
-
-  const state = State.create('game', { renderer, physics })
+  const state = State.create('game', { renderer })
   state.inputs.ia = []
   state.worldSize = worldSize
 
   // add ui
   state.ui = new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
 
-  // add entities (TODO:move this to prepare)
+  return state
+}
+
+const prepare = (state) => {
+  const { inputs, worldSize } = state
+
+  // clear old objects
+  if (inputs.player) LocalInputs.clear(inputs.player)
+  state.entities = []
+
+  // create physic engine
+  state.physics = Physics.create()
+
+  // add entities
   // - player
   state.player = add(state, Player.create('player', { x: worldSize.x / 2, y: worldSize.y / 2 }))
   state.inputs.player = LocalInputs.create(state.player, { game: state })
@@ -52,24 +63,14 @@ const create = (renderer, { worldSize }) => {
     }
   }
 
-  return state
-}
-
-const prepare = (state) => {
-  // clear old objects
-  LocalInputs.clear(state.inputs.player)
-
-  // recreate a world
-  const newState = create(state.renderer, { worldSize: state.worldSize })
-
-  const { player, entities, ui, renderer } = newState
-
+  // add entities to renderer
+  const { player, entities, ui, renderer } = state
   Renderer.addToStage(renderer, { graphics: renderer.viewport })
-  Renderer.follow(renderer, player)
   Renderer.addToStage(renderer, { graphics: ui })
   Renderer.addToViewport(renderer, entities)
 
-  return newState
+  // follow the player (camera)
+  Renderer.follow(renderer, player)
 }
 
 const update = (state, delta) => {

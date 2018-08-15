@@ -16,8 +16,6 @@ const prepare = (state, previous) => {
   state.inputs = inputs.player
 
   Renderer.addToStage(renderer, { graphics: ui })
-
-  return state
 }
 
 const update = (state) => {

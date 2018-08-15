@@ -43,7 +43,7 @@ const loop = () => {
 
   // prepare next state
   if (previousState !== state) {
-    states[state] = State.prepare(states[state], states[previousState])
+    State.prepare(states[state], states[previousState])
     previousState = state
   }
 

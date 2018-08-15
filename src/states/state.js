@@ -3,7 +3,7 @@ import Renderer from '../renderer/renderer'
 import Game from './game'
 import Gameover from './gameover'
 
-const create = (id, { renderer, physics, viewport }) => {
+const create = (id, { renderer }) => {
   const fps = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
   fps.position.y = window.innerHeight - 30
   fps.position.x = window.innerWidth - 50
@@ -11,8 +11,6 @@ const create = (id, { renderer, physics, viewport }) => {
   return {
     id,
     renderer,
-    physics,
-    viewport, // TODO: remove this ?
     fps,
     inputs: {},
     lastFPS: [],
@@ -51,8 +49,8 @@ const prepare = (state, previous) => {
   Renderer.addToStage(renderer, { graphics: fps })
 
   // call other prepare
-  if (id === 'game') return Game.prepare(state, previous)
-  else if (id === 'gameover') return Gameover.prepare(state, previous)
+  if (id === 'game') Game.prepare(state, previous)
+  else if (id === 'gameover') Gameover.prepare(state, previous)
 }
 
 export default {

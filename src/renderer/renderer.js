@@ -48,6 +48,7 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
 
   return {
     follow: undefined,
+    followed: false,
     entities: [],
     renderer,
     viewport,
@@ -94,12 +95,13 @@ const addToStage = (renderer, entities) => {
 }
 
 const follow = (renderer, entity) => {
-  const { matter, viewport } = renderer
+  const { matter, viewport, followed } = renderer
 
   renderer.follow = entity
 
   if (!matter) {
-    viewport.follow(entity.body.position, { speed: 20, radius: 100 })
+    viewport.follow(entity.body.position, { speed: followed ? 20 : 0, radius: 100 })
+    renderer.followed = true
   }
 }
 

@@ -12,10 +12,16 @@ const create = (renderer) => {
 
 const prepare = (state, previous) => {
   const { ui, renderer } = state
-  const { inputs } = previous
+  const { inputs, player } = previous
   state.inputs = inputs.player
 
   Renderer.addToStage(renderer, { graphics: ui })
+
+  const whyStr = player.hp > 0 ? 'You win 💪' : 'You loose 😱'
+  const why = new Text(whyStr, { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
+  why.position.x = 30
+  why.position.y = 30
+  Renderer.addToStage(renderer, { graphics: why })
 }
 
 const update = (state) => {

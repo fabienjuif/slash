@@ -8,7 +8,7 @@ const create = (id, { x, y, color = 0xff00ff }) => {
 
   const graphics = new Graphics()
 
-  return {
+  const player = {
     id,
     label: id,
     graphics,
@@ -24,6 +24,10 @@ const create = (id, { x, y, color = 0xff00ff }) => {
       dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
     },
   }
+
+  physics.player = player
+
+  return player
 }
 
 const update = player => {

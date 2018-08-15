@@ -24,7 +24,7 @@ const WORLD_SIZE = {
 }
 
 const player = Player.create('player', { x: WORLD_SIZE.x / 2, y: WORLD_SIZE.y / 2 })
-const enemies = Array.from({ length: 10 }).map((_, index) => Player.create(`enemy-${index}`, { x: random(100, WORLD_SIZE.x - 100), y: random(100, WORLD_SIZE.y - 100), color: 0xfffff00 }))
+const enemies = Array.from({ length: 2 }).map((_, index) => Player.create(`enemy-${index}`, { x: random(100, WORLD_SIZE.x - 100), y: random(100, WORLD_SIZE.y - 100), color: 0xfffff00 }))
 
 // walls around the level
 const walls = [
@@ -99,29 +99,31 @@ const localInputs = LocalInputs.create(player, { players: enemies })
 Events.on(engine, 'collisionStart', function(event) {
   var pairs = event.pairs
 
-  // change object colours to show those starting a collision
   for (var i = 0; i < pairs.length; i++) {
     const { bodyA, bodyB } = pairs[i]
 
-    // if (['player', 'enemy'].includes(bodyA.label) && ['player', 'enemy'].includes(bodyB.label)) {
-    //   if (Skill.isChanneling(enemy.skills.jump) && !Skill.isChanneling(player.skills.shield)) {
-    //     Pair.setActive(pairs[i], false)
-    //     player.hp -= 50
-    //     if (player.hp <= 0) {
-    //       Skill.trigger(player.skills.dead)
-    //       World.remove(engine.world, player.physics)
-    //     }
-    //   }
+    if (bodyA.player && bodyB.player) {
+      const damage = (first, second) => { // TODO: move it to player/sprites (with previous condition ?)
+        if (Skill.isChanneling(first.player.skills.jump) && !Skill.isChanneling(second.player.skills.jump)) {
+          // inactive so both bodies can pass through
+          Pair.setActive(pairs[i], false)
 
-    //   if (Skill.isChanneling(player.skills.jump) && !Skill.isChanneling(enemy.skills.shield)) {
-    //     Pair.setActive(pairs[i], false)
-    //     enemy.hp -= 50
-    //     if (enemy.hp <= 0) {
-    //       Skill.trigger(enemy.skills.dead)
-    //       World.remove(engine.world, enemy.physics)
-    //     }
-    //   }
-    // }
+          // retrieve some HP and death ?
+          second.player.hp -= 20 // TODO: get it from meta skill ?
+          if (second.player.hp <= 0) {
+            Skill.trigger(second.player.skills.dead)
+            World.remove(engine.world, second)
+          }
+
+          // someone that sucessfully touch an other player get a jump that last longer
+          // FIXME: don't mutate object
+          first.player.skills.jump.until += 100
+        }
+      }
+
+      damage(bodyA, bodyB)
+      damage(bodyB, bodyA)
+    }
   }
 })
 

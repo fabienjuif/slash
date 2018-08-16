@@ -27,12 +27,17 @@ const prepare = (state, previous) => {
 const update = (state) => {
   const { inputs } = state
 
-  if (inputs.keys.enter) return 'game'
+  if (inputs.keys.enter) return 'welcome'
   return 'gameover'
+}
+
+const clear = () => {
+  // TODO:
 }
 
 export default {
   create,
   prepare,
   update,
+  clear,
 }

@@ -98,8 +98,13 @@ const update = (state, delta) => {
   return 'gameover'
 }
 
+const clear = () => {
+  // TODO:
+}
+
 export default {
   create,
   prepare,
   update,
+  clear,
 }

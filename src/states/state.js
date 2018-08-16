@@ -1,7 +1,8 @@
-import { Container, Text } from 'pixi.js'
+import { Text } from 'pixi.js'
 import Renderer from '../renderer/renderer'
 import Game from './game'
 import Gameover from './gameover'
+import Welcome from './welcome/state'
 
 const create = (id, { renderer }) => {
   const fps = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
@@ -32,6 +33,7 @@ const update = (state, delta) => {
   let newState
   if (id === 'game') newState = Game.update(state, delta)
   else if (id === 'gameover') newState = Gameover.update(state, delta)
+  else if (id === 'welcome') newState = Welcome.update(state, delta)
 
   // draw
   Renderer.update(renderer)
@@ -51,6 +53,7 @@ const prepare = (state, previous) => {
   // call other prepare
   if (id === 'game') Game.prepare(state, previous)
   else if (id === 'gameover') Gameover.prepare(state, previous)
+  else if (id === 'welcome') Welcome.prepare(state, previous)
 }
 
 export default {

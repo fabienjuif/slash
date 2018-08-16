@@ -2,6 +2,7 @@ import Renderer from './renderer/renderer'
 import Game from './states/game'
 import Gameover from './states/gameover'
 import State from './states/state'
+import Welcome from './states/welcome/state'
 
 const TEST_PERF = false
 const FAST = false || TEST_PERF
@@ -17,11 +18,11 @@ const renderer = Renderer.create(window.innerWidth, window.innerHeight, worldSiz
 const states = {
   game: Game.create(renderer, { worldSize }),
   gameover: Gameover.create(renderer),
-  // TODO: start
+  welcome: Welcome.create(renderer),
 }
 
 let previousState
-let state = 'game'
+let state = 'welcome'
 let lastLoop = Date.now()
 let nbLoops = 0
 const start = Date.now()

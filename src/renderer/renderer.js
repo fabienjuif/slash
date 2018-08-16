@@ -1,7 +1,6 @@
 import { Container, autoDetectRenderer } from 'pixi.js'
 import Viewport from 'pixi-viewport'
 import { Render } from 'matter-js'
-import Entity from '../entities/entity'
 
 const reset = (renderer) => {
   const {
@@ -83,7 +82,6 @@ const update = (renderer) => {
       Render.lookAt(renderer.renderer, follow.body, { x: 500, y: 500 })
     }
   } else {
-    entities.forEach(Entity.draw)
     renderer.renderer.render(renderer.stage)
   }
 }

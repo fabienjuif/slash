@@ -1,5 +1,5 @@
 import { Common } from 'matter-js'
-import Skill from '../../../skills/skill'
+import Skill from '../skill'
 import Inputs from './inputs'
 
 const clear = (inputs) => {

@@ -1,7 +1,7 @@
 import { Graphics } from 'pixi.js'
 import { Bodies, Body, Vector, Pair, World } from 'matter-js'
+import Skill from '../skill'
 import Entity from './entity'
-import Skill from '../skills/skill'
 
 const create = (id, { x, y, color = 0xff00ff }) => {
   const body = Bodies.circle(x, y, 35)

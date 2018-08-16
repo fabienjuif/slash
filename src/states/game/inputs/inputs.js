@@ -1,4 +1,4 @@
-import Skill from '../../../skills/skill'
+import Skill from '../skill'
 
 const create = (entity, { game }) => {
   return {

@@ -1,11 +1,12 @@
 import { Text } from 'pixi.js'
 import { random } from 'lodash-es'
-import Physics from '../../physics/physics'
+import Physics from './physics'
 import Renderer from '../../renderer/renderer'
-import Wall from '../../entities/wall'
-import Player from '../../entities/player'
-import Skill from '../../skills/skill'
 import State from '../state'
+import Entity from './entities/entity'
+import Wall from './entities/wall'
+import Player from './entities/player'
+import Skill from './skill'
 import IA from './inputs/ia'
 import LocalInputs from './inputs/local'
 
@@ -87,6 +88,9 @@ const update = (state, delta) => {
   })
   print.push(`${Math.floor(player.hp)} HP`)
   state.ui.text = print.join(' | ')
+
+  // update entities
+  state.entities.forEach(Entity.draw)
 
   // is it gameover ?
   if (player.hp <= 0) return 'gameover'

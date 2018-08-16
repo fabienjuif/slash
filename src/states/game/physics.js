@@ -1,5 +1,5 @@
 import { Engine, World, Body, Events } from 'matter-js'
-import Entity from '../entities/entity'
+import Entity from './entities/entity'
 
 const create = () => {
   const engine = Engine.create()

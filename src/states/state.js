@@ -25,7 +25,7 @@ const update = (state, delta) => {
   // update fps
   lastFPS.push(1000 / delta)
   if (lastFPS.length > 10) {
-    fps.text = lastFPS.reduce((acc, curr) => acc + curr, 0) / lastFPS.length
+    fps.text = Math.trunc(lastFPS.reduce((acc, curr) => acc + curr, 0) / lastFPS.length)
     state.lastFPS = []
   }
 

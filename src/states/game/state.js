@@ -7,7 +7,7 @@ import Entity from './entities/entity'
 import Wall from './entities/wall'
 import Player from './entities/player'
 import Skill from './skill'
-import IA from './inputs/ia'
+import AI from './inputs/ai'
 import LocalInputs from './inputs/local'
 
 const WALL_WIDTH = 100
@@ -24,7 +24,7 @@ const add = (state, entities) => {
 
 const create = (renderer, { worldSize }) => {
   const state = State.create('game', { renderer })
-  state.inputs.ia = []
+  state.inputs.ai = []
   state.worldSize = worldSize
 
   // add ui
@@ -44,8 +44,8 @@ const prepare = (state) => {
   state.player = add(state, Player.create('player', { x: worldSize.x / 2, y: worldSize.y / 2 }))
   state.inputs.player = LocalInputs.create(state.player, { game: state })
   // - enemies
-  const ias = add(state, Array.from({ length: 2 }).map(() => Player.create('ia', { x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
-  ias.forEach(ia => state.inputs.ia.push(IA.create(ia, { game: state })))
+  const ias = add(state, Array.from({ length: 2 }).map(() => Player.create('ai', { x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
+  ias.forEach(ai => state.inputs.ai.push(AI.create(ai, { game: state })))
   // - walls around the level
   add(state, Wall.create(0, 0, worldSize.x, WALL_WIDTH))
   add(state, Wall.create(0, 0, WALL_WIDTH, worldSize.y))
@@ -74,7 +74,7 @@ const update = (state, delta) => {
   const { physics, inputs, player, entities } = state
 
   // update inputs
-  inputs.ia.forEach(IA.update)
+  inputs.ai.forEach(AI.update)
   LocalInputs.update(inputs.player)
 
   // update physics

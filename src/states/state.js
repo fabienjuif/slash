@@ -1,7 +1,7 @@
 import { Text } from 'pixi.js'
 import Renderer from '../renderer/renderer'
-import Game from './game'
-import Gameover from './gameover'
+import Game from './game/state'
+import Gameover from './gameover/state'
 import Welcome from './welcome/state'
 
 const create = (id, { renderer }) => {
@@ -56,8 +56,17 @@ const prepare = (state, previous) => {
   else if (id === 'welcome') Welcome.prepare(state, previous)
 }
 
+const clear = (state) => {
+  const { id } = state
+
+  if (id === 'game') Game.clear(state)
+  else if (id === 'gameover') Gameover.clear(state)
+  else if (id === 'welcome') Welcome.clear(state)
+}
+
 export default {
   create,
   prepare,
   update,
+  clear,
 }

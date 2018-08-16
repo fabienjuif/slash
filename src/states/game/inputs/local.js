@@ -1,5 +1,6 @@
 import Inputs from './inputs'
 
+// TODO: this code should be merge with Gameover/inputs and Welcome/Inputs
 const defaultBindings = {
   jump: 67, // c
   shield: 86, // v

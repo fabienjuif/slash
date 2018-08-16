@@ -1,13 +1,13 @@
 import { Text } from 'pixi.js'
 import { random } from 'lodash-es'
-import Physics from '../physics/physics'
-import Renderer from '../renderer/renderer'
-import Wall from '../entities/wall'
-import Player from '../entities/player'
-import IA from '../inputs/ia' // TODO: should be into a sub directory since this inputs depends on state
-import LocalInputs from '../inputs/local' // TODO: should be into a sub directory since this inputs depends on state
-import Skill from '../skills/skill'
-import State from './state'
+import Physics from '../../physics/physics'
+import Renderer from '../../renderer/renderer'
+import Wall from '../../entities/wall'
+import Player from '../../entities/player'
+import Skill from '../../skills/skill'
+import State from '../state'
+import IA from './inputs/ia'
+import LocalInputs from './inputs/local'
 
 const WALL_WIDTH = 100
 
@@ -33,11 +33,7 @@ const create = (renderer, { worldSize }) => {
 }
 
 const prepare = (state) => {
-  const { inputs, worldSize } = state
-
-  // clear old objects
-  if (inputs.player) LocalInputs.clear(inputs.player)
-  state.entities = []
+  const { worldSize } = state
 
   // create physic engine
   state.physics = Physics.create()
@@ -98,8 +94,9 @@ const update = (state, delta) => {
   return 'gameover'
 }
 
-const clear = () => {
-  // TODO:
+const clear = (state) => {
+  LocalInputs.clear(state.inputs.player)
+  state.entities = []
 }
 
 export default {

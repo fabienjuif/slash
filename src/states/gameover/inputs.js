@@ -26,8 +26,8 @@ const create = ({ bindings = defaultBindings } = {}) => {
 
   return Object.assign(
     inputs,
-    reactKey,
     {
+      reactKey,
       bindings,
     },
   )

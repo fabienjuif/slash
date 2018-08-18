@@ -3,10 +3,11 @@ import Renderer from '../renderer/renderer'
 import Game from './game/state'
 import Gameover from './gameover/state'
 import Welcome from './welcome/state'
+import Test from './test/state'
 
 const create = (id, { renderer }) => {
   const fps = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  fps.position.y = window.innerHeight - 30
+  fps.position.y = 30
   fps.position.x = window.innerWidth - 50
 
   return {
@@ -34,6 +35,7 @@ const update = (state, delta) => {
   if (id === 'game') newState = Game.update(state, delta)
   else if (id === 'gameover') newState = Gameover.update(state, delta)
   else if (id === 'welcome') newState = Welcome.update(state, delta)
+  else if (id === 'test') newState = Test.update(state, delta)
 
   // draw
   Renderer.update(renderer)
@@ -54,6 +56,7 @@ const prepare = (state, previous) => {
   if (id === 'game') Game.prepare(state, previous)
   else if (id === 'gameover') Gameover.prepare(state, previous)
   else if (id === 'welcome') Welcome.prepare(state, previous)
+  else if (id === 'test') Test.prepare(state, previous)
 }
 
 const clear = (state) => {
@@ -62,6 +65,7 @@ const clear = (state) => {
   if (id === 'game') Game.clear(state)
   else if (id === 'gameover') Gameover.clear(state)
   else if (id === 'welcome') Welcome.clear(state)
+  else if (id === 'test') Test.clear(state)
 }
 
 export default {

@@ -29,8 +29,8 @@ const create = (entity, { game, bindings = defaultBindings }) => {
 
   return Object.assign(
     inputs,
-    reactKey,
     {
+      reactKey,
       bindings,
     },
   )

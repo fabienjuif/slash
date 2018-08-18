@@ -1,11 +1,13 @@
 const defaultBindings = {
   enter: 13, // enter key
+  test: 84, // t key
 }
 
 const create = ({ bindings = defaultBindings } = {}) => {
   const inputs = {
     keys: {
       enter: false,
+      test: false,
     },
   }
 
@@ -24,8 +26,8 @@ const create = ({ bindings = defaultBindings } = {}) => {
 
   return Object.assign(
     inputs,
-    reactKey,
     {
+      reactKey,
       bindings,
     },
   )

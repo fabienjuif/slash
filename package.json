@@ -5,7 +5,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "parcel public/index.html -p 3000",
+    "start": "parcel public/index.html -p 3000 --no-hmr",
     "build": "parcel build public/index.html --no-source-maps",
     "serve": "http-serve dist -p 8080"
   },

@@ -46,6 +46,7 @@ const update = (state) => {
   const { inputs } = state
 
   if (inputs.keys.enter) return 'game'
+  if (inputs.keys.test) return 'test'
   return 'welcome'
 }
 

@@ -1,12 +1,13 @@
-import { Text, Container } from 'pixi.js'
+import { Text, Container, Graphics } from 'pixi.js'
 import Renderer from '../../renderer/renderer'
 import State from '../state'
-import Inputs from './inputs'
+import Keyboard from './inputs/keyboard'
+import Touch from './inputs/touch'
 
 const create = (renderer) => {
   const state = State.create('welcome', { renderer })
 
-  state.inputs = Inputs.create()
+  state.inputs = []
   state.ui = new Container()
 
   let x = 0
@@ -31,13 +32,19 @@ const create = (renderer) => {
   text('You are against 2 AI, try to kill them by slashing through them!')
   y += 50
   text('Press <enter> to start ⚡️')
+  y += 50
+  text('Or <touch> here (mobile)')
 
   return state
 }
 
 const prepare = (state) => {
   const { ui, renderer } = state
-  state.inputs = Inputs.create()
+
+  state.inputs = [
+    Keyboard.create(),
+    Touch.create(),
+  ]
 
   Renderer.addToStage(renderer, { graphics: ui })
 }
@@ -45,13 +52,19 @@ const prepare = (state) => {
 const update = (state) => {
   const { inputs } = state
 
-  if (inputs.keys.enter) return 'game'
-  if (inputs.keys.test) return 'test'
+  for (let i = 0; i < inputs.length; i += 1) {
+    if (inputs[i].keys.enter) {
+      state.inputsType = inputs[i].type
+      return 'game'
+    }
+  }
+
   return 'welcome'
 }
 
 const clear = (state) => {
-  Inputs.clear(state.inputs)
+  Keyboard.clear(state.inputs[0])
+  Touch.clear(state.inputs[1])
 }
 
 export default {

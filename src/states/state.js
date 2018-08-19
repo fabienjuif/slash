@@ -3,7 +3,6 @@ import Renderer from '../renderer/renderer'
 import Game from './game/state'
 import Gameover from './gameover/state'
 import Welcome from './welcome/state'
-import Test from './test/state'
 
 const create = (id, { renderer }) => {
   const fps = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
@@ -12,6 +11,7 @@ const create = (id, { renderer }) => {
 
   return {
     id,
+    inputType: 'keyboard',
     renderer,
     fps,
     inputs: {},
@@ -35,7 +35,6 @@ const update = (state, delta) => {
   if (id === 'game') newState = Game.update(state, delta)
   else if (id === 'gameover') newState = Gameover.update(state, delta)
   else if (id === 'welcome') newState = Welcome.update(state, delta)
-  else if (id === 'test') newState = Test.update(state, delta)
 
   // draw
   Renderer.update(renderer)
@@ -45,6 +44,9 @@ const update = (state, delta) => {
 
 const prepare = (state, previous) => {
   const { id, renderer, fps } = state
+
+  // get inputs type
+  if (previous) state.inputsType = previous.inputsType
 
   // reset rendrer
   Renderer.reset(renderer)
@@ -56,7 +58,6 @@ const prepare = (state, previous) => {
   if (id === 'game') Game.prepare(state, previous)
   else if (id === 'gameover') Gameover.prepare(state, previous)
   else if (id === 'welcome') Welcome.prepare(state, previous)
-  else if (id === 'test') Test.prepare(state, previous)
 }
 
 const clear = (state) => {
@@ -65,7 +66,6 @@ const clear = (state) => {
   if (id === 'game') Game.clear(state)
   else if (id === 'gameover') Gameover.clear(state)
   else if (id === 'welcome') Welcome.clear(state)
-  else if (id === 'test') Test.clear(state)
 }
 
 export default {

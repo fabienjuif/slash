@@ -2,7 +2,6 @@ import Renderer from './renderer/renderer'
 import Game from './states/game/state'
 import Gameover from './states/gameover/state'
 import Welcome from './states/welcome/state'
-import Test from './states/test/state'
 import State from './states/state'
 
 const TEST_PERF = false
@@ -20,7 +19,6 @@ const states = {
   game: Game.create(renderer, { worldSize }),
   gameover: Gameover.create(renderer),
   welcome: Welcome.create(renderer),
-  test: Test.create(renderer),
 }
 
 let previousState
@@ -36,7 +34,7 @@ const loop = () => {
       return
     }
 
-    nbLoops++
+    nbLoops += 1
   }
 
   // loop delta

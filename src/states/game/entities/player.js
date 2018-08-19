@@ -3,19 +3,18 @@ import { Bodies, Body, Vector, Pair, World } from 'matter-js'
 import Skill from '../skill'
 import Entity from './entity'
 
-const create = (id, { x, y, color = 0xff00ff }) => {
+const create = (id, { x, y, inputs, color = 0xff00ff }) => {
   const body = Bodies.circle(x, y, 35)
   const graphics = new Graphics()
 
   const skills = {
     jump: Skill.create('jump', { cooldown: 1000, last: 100 }),
     shield: Skill.create('shield', { cooldown: 90, last: 100 }),
-    move: Skill.create('move', { cooldown: 0, last: Infinity }),
     dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
   }
 
-  return Object.assign(
-    Entity.create('player', { graphics, body }),
+  const entity = Object.assign(
+    Entity.create('player', { graphics, body, inputs }),
     {
       id,
       color,
@@ -25,11 +24,38 @@ const create = (id, { x, y, color = 0xff00ff }) => {
       skills,
     },
   )
+
+  if (inputs) {
+    inputs.entity = entity
+  }
+
+  return entity
 }
 
-const update = player => {
-  const { body, skills, looking, moving } = player
+const update = (player) => {
+  const { body, skills, looking, moving, inputs } = player
   const { jump, shield, dead } = skills
+  const { keys } = inputs
+
+  if (Skill.isCooldown(dead)) return
+
+  if (keys.jump) Skill.trigger(jump)
+  if (keys.shield) Skill.trigger(shield)
+
+  let x = 0
+  let y = 0
+  if (keys.up) y -= 1
+  if (keys.down) y = 1
+  if (keys.right) x = 1
+  if (keys.left) x = -1
+  if (!keys.up && !keys.down) y = 0
+  if (!keys.right && !keys.left) x = 0
+
+  // looking to deplacement direction
+  moving.x = x
+  moving.y = y
+  looking.x = x
+  looking.y = y
 
   // jump skill block the moving one
   if (Skill.isChanneling(jump)) {
@@ -45,7 +71,7 @@ const update = player => {
   }
 }
 
-const draw = player => {
+const draw = (player) => {
   const { skills, color, graphics, body } = player
   const { jump, shield, dead } = skills
 

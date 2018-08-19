@@ -1,46 +1,29 @@
 import { Common } from 'matter-js'
-import Skill from '../skill'
 import Inputs from './inputs'
 
-const clear = (inputs) => {
-  inputs.keys = {
-    up: false,
-    down: false,
-    left: false,
-    right: false,
-    shield: false,
-    jump: false,
-  }
-
-  inputs.cleared = true
-}
-
-const create = (entity, { game }) => {
+const create = ({ game }) => {
   const inputs = Object.assign(
-    Inputs.create(entity, { game }),
+    Inputs.create('ai', { game }),
     {
+      entity: undefined,
       lastxDirection: 0,
       lastyDirection: 0,
       cleared: false,
-      player: game.entities.find(entity => entity.id === 'player')
-    }
+      player: game.entities.find(entity => entity.id === 'player'),
+    },
   )
 
   return inputs
 }
 
 const update = (inputs) => {
-  const { entity, player, lastxDirection, lastyDirection, keys, cleared } = inputs
-  const { skills, body } = entity
-
-  // dead -> clear all
-  if (!cleared && Skill.isCooldown(skills.dead)) clear(inputs)
-
-  // helper
+  return
+  const { entity, player, lastxDirection, lastyDirection, keys } = inputs
+  const { body } = entity
 
   const isPlayerClose = (
-    Math.abs(player.body.position.x - entity.body.position.x) < 200 &&
-    Math.abs(player.body.position.y - entity.body.position.y) < 200
+    Math.abs(player.body.position.x - body.position.x) < 200 &&
+    Math.abs(player.body.position.y - body.position.y) < 200
   )
 
   // try to jump (TODO: use lodash random)
@@ -62,11 +45,13 @@ const update = (inputs) => {
   keys.down = (inputs.lastyDirection > 0)
   keys.left = (inputs.lastxDirection < 0)
   keys.right = (inputs.lastxDirection > 0)
+}
 
-  Inputs.update(inputs)
+const clear = () => {
 }
 
 export default {
   create,
   update,
+  clear,
 }

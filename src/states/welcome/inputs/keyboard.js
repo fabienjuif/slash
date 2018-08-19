@@ -1,18 +1,14 @@
-import Inputs from './inputs'
-
-// TODO: this code should be merge with Gameover/inputs and Welcome/Inputs
 const defaultBindings = {
-  jump: 67, // c
-  shield: 86, // v
-  left: 37, // left arrow
-  right: 39, // right arrow
-  up: 38, // top arrow
-  down: 40, // bottom arrow
   enter: 13, // enter key
 }
 
-const create = (entity, { game, bindings = defaultBindings }) => {
-  const inputs = Inputs.create(entity, { game })
+const create = ({ bindings = defaultBindings } = {}) => {
+  const inputs = {
+    type: 'keyboard',
+    keys: {
+      enter: false,
+    },
+  }
 
   const entries = Object.entries(bindings)
 
@@ -44,5 +40,4 @@ const clear = (inputs) => {
 export default {
   create,
   clear,
-  update: Inputs.update,
 }

@@ -1,4 +1,4 @@
-import { Text } from 'pixi.js'
+import { Text, Graphics } from 'pixi.js'
 import { random } from 'lodash-es'
 import Physics from './physics'
 import Renderer from '../../renderer/renderer'
@@ -8,7 +8,8 @@ import Wall from './entities/wall'
 import Player from './entities/player'
 import Skill from './skill'
 import AI from './inputs/ai'
-import LocalInputs from './inputs/local'
+import Keyboard from './inputs/keyboard'
+import Touch from './inputs/touch'
 
 const WALL_WIDTH = 100
 
@@ -28,24 +29,34 @@ const create = (renderer, { worldSize }) => {
   state.worldSize = worldSize
 
   // add ui
-  state.ui = new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
+  state.ui = {
+    infos: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
+    touch: undefined,
+  }
 
   return state
 }
 
 const prepare = (state) => {
-  const { worldSize } = state
+  const { worldSize, inputsType } = state
+
+  let inputs
+  if (inputsType === 'keyboard') {
+    inputs = Keyboard.create()
+  }
+  if (inputsType === 'touch') {
+    inputs = Touch.create()
+    state.ui.touch = new Graphics()
+  }
 
   // create physic engine
   state.physics = Physics.create()
 
   // add entities
   // - player
-  state.player = add(state, Player.create('player', { x: worldSize.x / 2, y: worldSize.y / 2 }))
-  state.inputs.player = LocalInputs.create(state.player, { game: state })
+  state.player = add(state, Player.create('player', { inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
   // - enemies
-  const ias = add(state, Array.from({ length: 2 }).map(() => Player.create('ai', { x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
-  ias.forEach(ai => state.inputs.ai.push(AI.create(ai, { game: state })))
+  add(state, Array.from({ length: 1 }).map(() => Player.create('ai', { inputs: AI.create({ game: state }), x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
   // - walls around the level
   add(state, Wall.create(0, 0, worldSize.x, WALL_WIDTH))
   add(state, Wall.create(0, 0, WALL_WIDTH, worldSize.y))
@@ -63,7 +74,8 @@ const prepare = (state) => {
   // add entities to renderer
   const { player, entities, ui, renderer } = state
   Renderer.addToStage(renderer, { graphics: renderer.viewport })
-  Renderer.addToStage(renderer, { graphics: ui })
+  Renderer.addToStage(renderer, { graphics: state.ui.infos })
+  if (state.ui.touch) Renderer.addToStage(renderer, { graphics: state.ui.touch })
   Renderer.addToViewport(renderer, entities)
 
   // follow the player (camera)
@@ -71,25 +83,50 @@ const prepare = (state) => {
 }
 
 const update = (state, delta) => {
-  const { physics, inputs, player, entities } = state
+  const { physics, player, entities, ui } = state
 
-  // update inputs
-  inputs.ai.forEach(AI.update)
-  LocalInputs.update(inputs.player)
+  // update entities
+  state.entities.forEach(Entity.update)
 
   // update physics
   Physics.update(physics, delta)
 
   // update ui
   const print = ['jump', 'shield'].map(skillName => {
+    const { bindings } = player.inputs
     const skill = player.skills[skillName]
     const cooldown = Skill.isCooldown(skill) ? `${skill.next - Date.now()}`.padStart(7, ' ') : 'ready !'
-    return `${skillName}(${String.fromCharCode(inputs.player.bindings[skillName])}): ${cooldown}`
+
+    const bindTxt = bindings ? ` (${String.fromCharCode(player.inputs.bindings[skillName])})`: ''
+    return `${skillName}${bindTxt}: ${cooldown}`
   })
   print.push(`${Math.floor(player.hp)} HP`)
-  state.ui.text = print.join(' | ')
+  ui.infos.text = print.join(' | ')
 
-  // update entities
+  // touch ui
+  const { jump, shield, up, down, left, right } = player.inputs.keys
+
+  if (ui.touch) {
+    ui.touch.clear()
+    // - shield
+    ui.touch.beginFill(0x42B37F)
+    ui.touch.drawCircle(window.innerWidth - 45, window.innerHeight - 100, shield ? 35 : 40)
+    ui.touch.endFill()
+    // - jump
+    ui.touch.beginFill(0xAE2D2D)
+    ui.touch.drawCircle(window.innerWidth - 110, window.innerHeight - 45, jump ? 35 : 40)
+    ui.touch.endFill()
+    // - stick (outline)
+    ui.touch.lineStyle(2, 0xffffff)
+    ui.touch.drawCircle(105, window.innerHeight - 105, 100)
+    ui.touch.endFill()
+    // - stick (inner)
+    ui.touch.beginFill(0xffffff)
+    ui.touch.drawCircle(105 + (left ? -30 : 0) + (right ? 30 : 0), window.innerHeight - 105 + (up ? -30 : 0) + (down ? 30 : 0), 25)
+    ui.touch.endFill()
+  }
+
+  // draw entities
   state.entities.forEach(Entity.draw)
 
   // is it gameover ?
@@ -99,7 +136,7 @@ const update = (state, delta) => {
 }
 
 const clear = (state) => {
-  LocalInputs.clear(state.inputs.player)
+  state.entities.forEach(Entity.clear)
   state.entities = []
 }
 

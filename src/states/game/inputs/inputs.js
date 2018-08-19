@@ -1,9 +1,10 @@
-import Skill from '../skill'
+import Keyboard from './keyboard'
+import AI from './ai'
+import Touch from './touch'
 
-const create = (entity, { game }) => {
+const create = (id) => {
   return {
-    entity,
-    game,
+    id,
     keys: {
       up: false,
       down: false,
@@ -17,41 +18,19 @@ const create = (entity, { game }) => {
 }
 
 const update = (inputs) => {
-  const { entity, keys } = inputs
-  const { skills } = entity
-  const { up, down, left, right, shield, jump } = keys
+  if (inputs.id === 'keyboard') Keyboard.update(inputs)
+  if (inputs.id === 'ai') AI.update(inputs)
+  if (inputs.id === 'touch') Touch.update(inputs)
+}
 
-  if (Skill.isCooldown(skills.dead)) return
-
-  if (jump && !Skill.isChanneling(jump)) {
-    Skill.trigger(skills.jump)
-    return
-  }
-
-  let x = 0
-  let y = 0
-
-  if (up) y -= 1
-  if (down) y = 1
-  if (right) x = 1
-  if (left) x = -1
-  if (!up && !down) y = 0
-  if (!right && !left) x = 0
-
-  // looking to deplacement direction
-  entity.moving.x = x
-  entity.moving.y = y
-  entity.looking.x = x
-  entity.looking.y = y
-
-  Skill.trigger(skills.move)
-
-  if (shield) {
-    Skill.trigger(skills.shield)
-  }
+const clear = (inputs) => {
+  if (inputs.id === 'keyboard') Keyboard.clear(inputs)
+  if (inputs.id === 'ai') AI.clear(inputs)
+  if (inputs.id === 'touch') Touch.clear(inputs)
 }
 
 export default {
   create,
   update,
+  clear,
 }

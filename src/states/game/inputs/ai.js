@@ -17,7 +17,6 @@ const create = ({ game }) => {
 }
 
 const update = (inputs) => {
-  return
   const { entity, player, lastxDirection, lastyDirection, keys } = inputs
   const { body } = entity
 

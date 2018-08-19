@@ -56,7 +56,7 @@ const prepare = (state) => {
   // - player
   state.player = add(state, Player.create('player', { inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
   // - enemies
-  add(state, Array.from({ length: 1 }).map(() => Player.create('ai', { inputs: AI.create({ game: state }), x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
+  add(state, Array.from({ length: 2 }).map(() => Player.create('ai', { inputs: AI.create({ game: state }), x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
   // - walls around the level
   add(state, Wall.create(0, 0, worldSize.x, WALL_WIDTH))
   add(state, Wall.create(0, 0, WALL_WIDTH, worldSize.y))

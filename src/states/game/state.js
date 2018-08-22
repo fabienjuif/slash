@@ -2,14 +2,70 @@ import { Text, Graphics } from 'pixi.js'
 import { random } from 'lodash-es'
 import Physics from './physics'
 import Renderer from '../../renderer/renderer'
+import Inputs from '../../inputs/inputs'
 import State from '../state'
 import Entity from './entities/entity'
 import Wall from './entities/wall'
 import Player from './entities/player'
 import Skill from './skill'
-import AI from './inputs/ai'
-import Keyboard from './inputs/keyboard'
-import Touch from './inputs/touch'
+import AI from './ai/classic'
+
+const bindings = {
+  jump: {
+    keyCode: 67, // c
+    zone: {
+      x: window.innerWidth - 150,
+      y: window.innerHeight - 85,
+      width: 80,
+      height: 80,
+    }
+  },
+  shield: {
+    keyCode: 86, // v
+    zone: {
+      x: window.innerWidth - 85,
+      y: window.innerHeight - 140,
+      width: 80,
+      height: 80,
+    },
+  },
+  left: {
+    keyCode: 37, // left arrow
+    zone: {
+      x: 5,
+      y: window.innerHeight - 200,
+      width: 80,
+      height: 195,
+    },
+  },
+  right: {
+    keyCode: 39, // right arrow
+    zone: {
+      x: 125,
+      y: window.innerHeight - 200,
+      width: 80,
+      height: 195,
+    },
+  },
+  up: {
+    keyCode: 38, // top arrow
+    zone: {
+      x: 5,
+      y: window.innerHeight - 200,
+      width: 195,
+      height: 80,
+    },
+  },
+  down: {
+    keyCode: 40, // bottom arrow
+    zone: {
+      x: 5,
+      y: window.innerHeight - 85,
+      width: 195,
+      height: 80,
+    },
+  },
+}
 
 const WALL_WIDTH = 100
 
@@ -25,38 +81,39 @@ const add = (state, entities) => {
 
 const create = (renderer, { worldSize }) => {
   const state = State.create('game', { renderer })
-  state.inputs.ai = []
+  state.ai = []
   state.worldSize = worldSize
 
   // add ui
   state.ui = {
     infos: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
-    touch: undefined,
+    touch: new Graphics(),
   }
 
   return state
 }
 
 const prepare = (state) => {
-  const { worldSize, inputsType } = state
-
-  let inputs
-  if (inputsType === 'keyboard') {
-    inputs = Keyboard.create()
-  }
-  if (inputsType === 'touch') {
-    inputs = Touch.create()
-    state.ui.touch = new Graphics()
-  }
+  const { worldSize } = state
 
   // create physic engine
   state.physics = Physics.create()
 
-  // add entities
-  // - player
-  state.player = add(state, Player.create('player', { inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
+  // player
+  // - inputs
+  // - entity
+  state.inputs = Inputs.create(bindings)
+  state.player = add(state, Player.create('player', { inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
+
+  // AI
+  state.ai = [
+    AI.create({ game: state }),
+    AI.create({ game: state }),
+  ]
+
+  // add entities (other than players)
   // - enemies
-  add(state, Array.from({ length: 2 }).map(() => Player.create('ai', { inputs: AI.create({ game: state }), x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
+  add(state, state.ai.map((inputs) => Player.create('ai', { inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
   // - walls around the level
   add(state, Wall.create(0, 0, worldSize.x, WALL_WIDTH))
   add(state, Wall.create(0, 0, WALL_WIDTH, worldSize.y))
@@ -74,8 +131,8 @@ const prepare = (state) => {
   // add entities to renderer
   const { player, entities, ui, renderer } = state
   Renderer.addToStage(renderer, { graphics: renderer.viewport })
-  Renderer.addToStage(renderer, { graphics: state.ui.infos })
-  if (state.ui.touch) Renderer.addToStage(renderer, { graphics: state.ui.touch })
+  Renderer.addToStage(renderer, { graphics: ui.infos })
+  Renderer.addToStage(renderer, { graphics: ui.touch })
   Renderer.addToViewport(renderer, entities)
 
   // follow the player (camera)
@@ -83,7 +140,13 @@ const prepare = (state) => {
 }
 
 const update = (state, delta) => {
-  const { physics, player, entities, ui } = state
+  const { physics, player, entities, ui, isTouched, ai } = state
+
+  // update player inputs
+  state.inputs = Inputs.update(state.inputs)
+
+  // update ai
+  ai.forEach(AI.update)
 
   // update entities
   state.entities.forEach(Entity.update)
@@ -104,9 +167,9 @@ const update = (state, delta) => {
   ui.infos.text = print.join(' | ')
 
   // touch ui
-  const { jump, shield, up, down, left, right } = player.inputs.keys
+  if (isTouched) {
+    const { jump, shield, up, down, left, right } = player.inputs.keys
 
-  if (ui.touch) {
     ui.touch.clear()
     // - shield
     ui.touch.beginFill(0x42B37F)
@@ -136,7 +199,7 @@ const update = (state, delta) => {
 }
 
 const clear = (state) => {
-  state.entities.forEach(Entity.clear)
+  Inputs.clear(state.inputs)
   state.entities = []
 }
 

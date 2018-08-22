@@ -1,8 +1,19 @@
 import { Text } from 'pixi.js'
 import Renderer from '../../renderer/renderer'
+import Inputs from '../../inputs/inputs'
 import State from '../state'
-import Touch from './inputs/touch'
-import Keyboard from './inputs/keyboard'
+
+const bindings = {
+  enter: {
+    keyCode: 13,
+    zone: {
+      x: 95,
+      y: 340,
+      width: 300,
+      height: 25,
+    },
+  },
+}
 
 const create = (renderer) => {
   const state = State.create('gameover', { renderer })
@@ -14,11 +25,10 @@ const create = (renderer) => {
 }
 
 const prepare = (state, previous) => {
-  const { ui, renderer, inputsType } = state
+  const { ui, renderer } = state
   const { player } = previous
 
-  if (inputsType === 'keyboard') state.inputs = Keyboard.create()
-  else if (inputsType === 'touch') state.inputs = Touch.create()
+  state.inputs = Inputs.create(bindings)
 
   Renderer.addToStage(renderer, { graphics: ui })
 
@@ -40,6 +50,8 @@ const prepare = (state, previous) => {
 }
 
 const update = (state) => {
+  state.inputs = Inputs.update(state.inputs)
+
   const { inputs } = state
 
   if (inputs.keys.enter) return 'welcome'
@@ -47,8 +59,7 @@ const update = (state) => {
 }
 
 const clear = (state) => {
-  if (state.inputsType === 'keyboard') Keyboard.clear(state.inputs)
-  else if (state.inputsType === 'touch') Touch.clear(state.inputs)
+  Inputs.clear(state.inputs)
 }
 
 export default {

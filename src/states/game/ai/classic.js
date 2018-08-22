@@ -1,21 +1,27 @@
 import { Common } from 'matter-js'
-import Inputs from './inputs'
 
+// TODO: pass game state directly (not within an object)
 const create = ({ game }) => {
-  const inputs = Object.assign(
-    Inputs.create('ai', { game }),
-    {
-      entity: undefined,
-      lastxDirection: 0,
-      lastyDirection: 0,
-      cleared: false,
-      player: game.entities.find(entity => entity.id === 'player'),
+  return {
+    id: 'ai-classic',
+    game,
+    entity: undefined,
+    lastxDirection: 0,
+    lastyDirection: 0,
+    player: game.entities.find(entity => entity.id === 'player'),
+    keys: {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      shield: false,
+      jump: false,
+      enter: false,
     },
-  )
-
-  return inputs
+  }
 }
 
+// TODO: debug and rename inputs to ai
 const update = (inputs) => {
   const { entity, player, lastxDirection, lastyDirection, keys } = inputs
   const { body } = entity
@@ -26,10 +32,10 @@ const update = (inputs) => {
   )
 
   // try to jump (TODO: use lodash random)
-  inputs.keys.jump = Common.choose([...Array.from({ length: isPlayerClose ? 10 : 50 }).map(() => false), true])
+  keys.jump = Common.choose([...Array.from({ length: isPlayerClose ? 10 : 50 }).map(() => false), true])
 
   // try to shield (TODO: use lodash random)
-  inputs.keys.shield = Common.choose([...Array.from({ length: isPlayerClose ? 50 : 100 }).map(() => false), true])
+  keys.shield = Common.choose([...Array.from({ length: isPlayerClose ? 50 : 100 }).map(() => false), true])
 
   // move
   let xDirection = 1
@@ -46,11 +52,7 @@ const update = (inputs) => {
   keys.right = (inputs.lastxDirection > 0)
 }
 
-const clear = () => {
-}
-
 export default {
   create,
   update,
-  clear,
 }

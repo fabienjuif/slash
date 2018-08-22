@@ -45,8 +45,8 @@ const update = (state, delta) => {
 const prepare = (state, previous) => {
   const { id, renderer, fps } = state
 
-  // get inputs type
-  if (previous) state.inputsType = previous.inputsType
+  // get if touched
+  if (previous) state.isTouched = previous.isTouched
 
   // reset rendrer
   Renderer.reset(renderer)

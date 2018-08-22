@@ -1,13 +1,24 @@
 import { Text, Container, Graphics } from 'pixi.js'
 import Renderer from '../../renderer/renderer'
 import State from '../state'
-import Keyboard from './inputs/keyboard'
-import Touch from './inputs/touch'
+import Inputs from '../../inputs/inputs'
+
+const bindings = {
+  enter: {
+    keyCode: 13,
+    zone: {
+      x: 95,
+      y: 340,
+      width: 300,
+      height: 25,
+    },
+  },
+}
 
 const create = (renderer) => {
   const state = State.create('welcome', { renderer })
 
-  state.inputs = []
+  state.inputs = undefined
   state.ui = new Container()
 
   let x = 0
@@ -41,30 +52,27 @@ const create = (renderer) => {
 const prepare = (state) => {
   const { ui, renderer } = state
 
-  state.inputs = [
-    Keyboard.create(),
-    Touch.create(),
-  ]
+  state.inputs = Inputs.create(bindings)
 
   Renderer.addToStage(renderer, { graphics: ui })
 }
 
 const update = (state) => {
-  const { inputs } = state
+  state.inputs = Inputs.update(state.inputs)
 
-  for (let i = 0; i < inputs.length; i += 1) {
-    if (inputs[i].keys.enter) {
-      state.inputsType = inputs[i].type
-      return 'game'
-    }
+  const { inputs } = state
+  const { keys, touch } = inputs
+
+  if (keys.enter) {
+    state.isTouched = !!touch.keys.enter
+    return 'game'
   }
 
   return 'welcome'
 }
 
 const clear = (state) => {
-  Keyboard.clear(state.inputs[0])
-  Touch.clear(state.inputs[1])
+  Inputs.clear(state.inputs)
 }
 
 export default {

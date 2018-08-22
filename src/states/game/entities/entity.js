@@ -14,28 +14,15 @@ const create = (type, { graphics, body, inputs } = {}) => {
   return entity
 }
 
-const update = (entity) => {
-  // update sub entities
-  if (entity.type === 'player') Player.update(entity)
-  // we don't need to update wall physics
-}
-
-const collides = (physics, pair, entityA, entityB) => {
-  if (entityA.type === 'player') Player.collides(physics, pair, entityA, entityB)
-  // we don't need to handle wall collision
-}
-
-const draw = (entity) => {
-  if (entity.type === 'player') Player.draw(entity)
-  else if (entity.type === 'wall') Wall.draw(entity)
+const route = fnName => (entity, ...args) => {
+  if (entity.type === 'player') return Player[fnName](entity, ...args)
+  if (entity.type === 'wall') return Wall[fnName](entity, ...args)
 }
 
 export default {
   create,
-  update,
-  draw,
-  collides: (physics, pair, entityA, entityB) => {
-    collides(physics, pair, entityA, entityB)
-    collides(physics, pair, entityB, entityA)
-  },
+  update: route('update'),
+  draw: route('draw'),
+  clear: route('clear'),
+  collides: route('collides'),
 }

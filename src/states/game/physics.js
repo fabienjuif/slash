@@ -20,7 +20,8 @@ const create = () => {
     for (var i = 0; i < pairs.length; i++) {
       const { bodyA, bodyB } = pairs[i]
 
-      Entity.collides(physics, pairs[i], bodyA.entity, bodyB.entity)
+      Entity.collides(bodyA.entity, bodyB.entity, pairs[i])
+      Entity.collides(bodyB.entity, bodyA.entity, pairs[i])
     }
   })
 

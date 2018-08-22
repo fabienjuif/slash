@@ -32,7 +32,16 @@ const draw = (wall) => {
   graphics.endFill()
 }
 
+const clear = (wall) => {
+  const { graphics } = wall
+
+  graphics.clear()
+}
+
 export default {
   create,
   draw,
+  collides: () => {},
+  update: () => true,
+  clear,
 }

@@ -34,8 +34,6 @@ const create = (bindings) => {
     for (let i = 0; i < changedTouches.length; i += 1) {
       const { clientX, clientY, identifier } = changedTouches[i]
 
-      console.log(clientX, clientY, window.innerWidth - clientX, window.innerHeight - clientY)
-
       for (let j = 0; j < codes.length; j += 1) {
         const code = codes[j]
 

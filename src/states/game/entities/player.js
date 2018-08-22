@@ -1,5 +1,5 @@
 import { Graphics } from 'pixi.js'
-import { Bodies, Body, Vector, Pair, World } from 'matter-js'
+import { Bodies, Body, Vector, Pair } from 'matter-js'
 import Skill from '../skill'
 import Entity from './entity'
 
@@ -58,17 +58,20 @@ const update = (player) => {
   looking.y = y
 
   // jump skill block the moving one
-  if (Skill.isChanneling(jump)) {
-    Body.setVelocity(body, Vector.mult(looking, 20))
-  } else {
-    Body.setVelocity(body, Vector.mult(moving, 10))
-  }
+  if (Skill.isChanneling(jump)) Body.setVelocity(body, Vector.mult(looking, 20))
+  else Body.setVelocity(body, Vector.mult(moving, 10))
 
   // remove some hp when channeling shield
-  if (Skill.isChanneling(shield)) {
-    player.hp -= (Date.now() - shield.since) / 100
-    if (player.hp <= 0) Skill.trigger(dead)
-  }
+  if (Skill.isChanneling(shield)) player.hp -= (Date.now() - shield.since) / 100
+
+  // check if player is not dead
+  if (player.hp > 0) return true
+  Skill.trigger(dead)
+
+  // if player is dead for good (after channeling effect we ask for removal)
+  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) return false
+
+  return true
 }
 
 const draw = (player) => {
@@ -76,8 +79,6 @@ const draw = (player) => {
   const { jump, shield, dead } = skills
 
   graphics.clear()
-
-  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) return
 
   let circleSize = 40
   if (Skill.isChanneling(dead)) circleSize = (dead.until - Date.now()) * 10
@@ -92,28 +93,29 @@ const draw = (player) => {
   graphics.endFill()
 }
 
-const collides = (physics, pair, entityA, entityB) => {
+const collides = (entity, other, pair) => {
   // if other entity is not a player, it does nothing
-  if (entityB.type !== 'player') return
+  if (other.type !== 'player') return
 
-  // entityA is the slasher
-  if (Skill.isChanneling(entityA.skills.jump) && !Skill.isChanneling(entityB.skills.shield)) {
-    // inactive so both bodies can pass through
-    Pair.setActive(pair, false)
+  // entityA is not a slasher -> do nothing
+  if (!Skill.isChanneling(entity.skills.jump) || Skill.isChanneling(other.skills.shield)) return
 
-    // someone that sucessfully touch an other player get a jump that last longer
-    // FIXME: don't mutate object
-    entityA.skills.jump.until += 100
-  }
+  // inactive so both bodies can pass through
+  Pair.setActive(pair, false)
 
-  // entityB is the slasher
-  if (Skill.isChanneling(entityB.skills.jump) && !Skill.isChanneling(entityA.skills.shield)) {
-    entityA.hp -= 20 // FIXME: don't mutate object
-    if (entityA.hp <= 0) {
-      Skill.trigger(entityA.skills.dead)
-      World.remove(physics.engine.world, entityA.body)
-    }
-  }
+  // someone that sucessfully touch an other player get a jump that last longer
+  // FIXME: don't mutate object
+  entity.skills.jump.until += 100
+
+  // other entity loose hp
+  // FIXME: don't mutate object
+  other.hp -= 20 // the player will be 'dead' in next frame (next update)
+}
+
+const clear = (player) => {
+  const { graphics } = player
+
+  graphics.clear()
 }
 
 export default {
@@ -121,4 +123,5 @@ export default {
   update,
   draw,
   collides,
+  clear,
 }

@@ -1,5 +1,6 @@
 import { Text, Graphics } from 'pixi.js'
 import { random } from 'lodash-es'
+import { World } from 'matter-js'
 import Physics from './physics'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
@@ -105,7 +106,7 @@ const prepare = (state) => {
   // - inputs
   // - entity
   state.inputs = Inputs.create(bindings)
-  state.player = add(state, Player.create('player', { inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
+  state.player = add(state, Player.create('player', { world: state.physics.world, inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
 
   // walls
   // - outside the level
@@ -123,10 +124,7 @@ const prepare = (state) => {
   }
 
   // AI
-  state.ai = [
-    AI.create(state),
-    AI.create(state),
-  ]
+  state.ai = Array.from({ length: 2 }).map(() => AI.create(state))
   add(state, state.ai.map((inputs) => Player.create('ai', { inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
 
   // add entities to renderer
@@ -150,7 +148,16 @@ const update = (state, delta) => {
   ai.forEach(AI.update)
 
   // update entities
-  state.entities.forEach(Entity.update)
+  state.entities =  state.entities.filter((entity) => {
+    const alive = Entity.update(entity)
+
+    if (!alive) {
+      World.remove(physics.engine.world, entity.body)
+      Entity.clear(entity)
+    }
+
+    return alive
+  })
 
   // update physics
   Physics.update(physics, delta)

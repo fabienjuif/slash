@@ -81,16 +81,18 @@ const add = (state, entities) => {
 
 const create = (renderer, { worldSize }) => {
   const state = State.create('game', { renderer })
-  state.ai = []
-  state.worldSize = worldSize
 
-  // add ui
-  state.ui = {
-    infos: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
-    touch: new Graphics(),
-  }
-
-  return state
+  return Object.assign(
+    state,
+    {
+      ai: [],
+      worldSize,
+      ui: {
+        infos: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
+        touch: new Graphics(),
+      },
+    },
+  )
 }
 
 const prepare = (state) => {
@@ -105,21 +107,13 @@ const prepare = (state) => {
   state.inputs = Inputs.create(bindings)
   state.player = add(state, Player.create('player', { inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
 
-  // AI
-  state.ai = [
-    AI.create({ game: state }),
-    AI.create({ game: state }),
-  ]
-
-  // add entities (other than players)
-  // - enemies
-  add(state, state.ai.map((inputs) => Player.create('ai', { inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
-  // - walls around the level
+  // walls
+  // - outside the level
   add(state, Wall.create(0, 0, worldSize.x, WALL_WIDTH))
   add(state, Wall.create(0, 0, WALL_WIDTH, worldSize.y))
   add(state, Wall.create(worldSize.x - WALL_WIDTH, 0, WALL_WIDTH, worldSize.y))
   add(state, Wall.create(0, worldSize.y - WALL_WIDTH, worldSize.x, WALL_WIDTH))
-  // - walls inside the level
+  // - inside the level
   for (let i = 0; i < worldSize.x / WALL_WIDTH; i += 1) {
     for (let j = 0; j < worldSize.y / WALL_WIDTH; j += 1) {
       if (random(0, 10) === 0) {
@@ -127,6 +121,13 @@ const prepare = (state) => {
       }
     }
   }
+
+  // AI
+  state.ai = [
+    AI.create(state),
+    AI.create(state),
+  ]
+  add(state, state.ai.map((inputs) => Player.create('ai', { inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
 
   // add entities to renderer
   const { player, entities, ui, renderer } = state

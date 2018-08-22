@@ -1,7 +1,6 @@
 import { Common } from 'matter-js'
 
-// TODO: pass game state directly (not within an object)
-const create = ({ game }) => {
+const create = (game) => {
   return {
     id: 'ai-classic',
     game,
@@ -21,9 +20,8 @@ const create = ({ game }) => {
   }
 }
 
-// TODO: debug and rename inputs to ai
-const update = (inputs) => {
-  const { entity, player, lastxDirection, lastyDirection, keys } = inputs
+const update = (ai) => {
+  const { entity, player, lastxDirection, lastyDirection, keys } = ai
   const { body } = entity
 
   const isPlayerClose = (
@@ -43,13 +41,13 @@ const update = (inputs) => {
   if (body.position.x > player.body.position.x) xDirection = -1
   if (body.position.y > player.body.position.y) yDirection = -1
 
-  inputs.lastxDirection = Common.choose([0, lastxDirection, lastxDirection, lastxDirection, lastxDirection, lastxDirection, xDirection])
-  inputs.lastyDirection = Common.choose([0, lastyDirection, lastyDirection, lastyDirection, lastyDirection, lastyDirection, yDirection])
+  ai.lastxDirection = Common.choose([0, lastxDirection, lastxDirection, lastxDirection, lastxDirection, lastxDirection, xDirection])
+  ai.lastyDirection = Common.choose([0, lastyDirection, lastyDirection, lastyDirection, lastyDirection, lastyDirection, yDirection])
 
-  keys.up = (inputs.lastyDirection < 0)
-  keys.down = (inputs.lastyDirection > 0)
-  keys.left = (inputs.lastxDirection < 0)
-  keys.right = (inputs.lastxDirection > 0)
+  keys.up = (ai.lastyDirection < 0)
+  keys.down = (ai.lastyDirection > 0)
+  keys.left = (ai.lastxDirection < 0)
+  keys.right = (ai.lastxDirection > 0)
 }
 
 export default {

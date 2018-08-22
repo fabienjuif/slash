@@ -34,20 +34,27 @@ const add = (physics, entities) => {
 }
 
 const update = (physics, delta) => {
-  // entities
-  for (let i = 0; i < physics.entities.length; i+= 1) {
-    const entity = physics.entities[i]
+  const { entities, perLoop, engine } = physics
 
+  // entities
+  // - remove them is not alive anymore
+  physics.entities = entities.filter((entity) => {
     Body.setAngle(entity.body, 0) // FIXME: look at friction, etc on bodies to avoid them to turn instead of doing this
-    Entity.update(entity)
-  }
+
+    if (Entity.update(entity)) return true
+
+    World.remove(engine.world, entity.body)
+    Entity.clear(entity)
+  })
+
+  console.log(entities.length)
 
   // engine
   // - run the engine several times, so we have the feeling the game is fast
   // - also, this avoid collision detecting issue since CCD is not implemented yet in matter-js
   let lastLoop = Date.now()
-  for (let i = 0; i < physics.perLoop; ++i) {
-    Engine.update(physics.engine, i === 0 ? delta : (Date.now() - lastLoop))
+  for (let i = 0; i < perLoop; ++i) {
+    Engine.update(engine, i === 0 ? delta : (Date.now() - lastLoop))
     lastLoop = Date.now()
   }
 }

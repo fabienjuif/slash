@@ -75,8 +75,6 @@ const add = (state, entities) => {
 
   Physics.add(physics, entities)
 
-  state.entities = state.entities.concat(entities)
-
   return entities
 }
 
@@ -128,18 +126,18 @@ const prepare = (state) => {
   add(state, state.ai.map((inputs) => Player.create('ai', { inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
 
   // add entities to renderer
-  const { player, entities, ui, renderer } = state
+  const { player, ui, renderer, physics } = state
   Renderer.addToStage(renderer, { graphics: renderer.viewport })
   Renderer.addToStage(renderer, { graphics: ui.infos })
   Renderer.addToStage(renderer, { graphics: ui.touch })
-  Renderer.addToViewport(renderer, entities)
+  Renderer.addToViewport(renderer, physics.entities)
 
   // follow the player (camera)
   Renderer.follow(renderer, player)
 }
 
 const update = (state, delta) => {
-  const { physics, player, entities, ui, isTouched, ai } = state
+  const { physics, player, ui, isTouched, ai } = state
 
   // update player inputs
   state.inputs = Inputs.update(state.inputs)
@@ -147,19 +145,7 @@ const update = (state, delta) => {
   // update ai
   ai.forEach(AI.update)
 
-  // update entities
-  state.entities =  state.entities.filter((entity) => {
-    const alive = Entity.update(entity)
-
-    if (!alive) {
-      World.remove(physics.engine.world, entity.body)
-      Entity.clear(entity)
-    }
-
-    return alive
-  })
-
-  // update physics
+  // update physics (and entities)
   Physics.update(physics, delta)
 
   // update ui
@@ -198,17 +184,19 @@ const update = (state, delta) => {
   }
 
   // draw entities
-  state.entities.forEach(Entity.draw)
+  physics.entities.forEach(Entity.draw)
 
   // is it gameover ?
-  if (player.hp <= 0) return 'gameover'
-  if (entities.filter(entity => entity.type === 'player' && entity.hp > 0).length > 1) return 'game'
-  return 'gameover'
+  if (
+    player.hp <= 0 ||
+    physics.entities.filter(entity => entity.type === 'player').length < 2
+  ) return 'gameover'
+
+  return 'game'
 }
 
 const clear = (state) => {
   Inputs.clear(state.inputs)
-  state.entities = []
 }
 
 export default {

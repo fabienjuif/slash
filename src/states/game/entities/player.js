@@ -104,16 +104,9 @@ const collides = (entity, other, pair) => {
   other.hp -= 20 // the player will be 'dead' in next frame (next update)
 }
 
-const clear = (player) => {
-  const { graphics } = player
-
-  graphics.destroy({ children: true, texture: true })
-}
-
 export default {
   create,
   update,
   draw,
   collides,
-  clear,
 }

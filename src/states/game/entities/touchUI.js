@@ -30,16 +30,7 @@ const draw = (ui) => {
   return true
 }
 
-const clear = (ui) => {
-  const { graphics } = ui
-
-  graphics.destroy({ children: true, texture: true })
-}
-
 export default {
-  collides: () => {},
-  update: () => true,
   create,
   draw,
-  clear,
 }

@@ -24,16 +24,6 @@ const create = ({ player }) => {
   return ui
 }
 
-const clear = (ui) => {
-  const { graphics } = ui
-
-  graphics.destroy({ children: true, texture: true })
-}
-
 export default {
-  collides: () => {},
-  update: () => true,
-  draw: () => true,
   create,
-  clear,
 }

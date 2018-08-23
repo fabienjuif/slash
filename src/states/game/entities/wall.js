@@ -27,16 +27,7 @@ const draw = (wall) => {
   return true
 }
 
-const clear = (wall) => {
-  const { graphics } = wall
-
-  graphics.destroy({ children: true, texture: true })
-}
-
 export default {
   create,
   draw,
-  collides: () => {},
-  update: () => true,
-  clear,
 }

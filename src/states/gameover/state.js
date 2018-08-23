@@ -1,7 +1,6 @@
 import { Text } from 'pixi.js'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
-import State from '../state'
 
 const bindings = {
   enter: {
@@ -15,14 +14,10 @@ const bindings = {
   },
 }
 
-const create = (renderer) => {
-  const state = State.create('gameover', { renderer })
-
-  state.ui = new Text('Gameover', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  state.inputs = undefined
-
-  return state
-}
+const create = () => ({
+  ui: new Text('Gameover', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
+  inputs: undefined,
+})
 
 const prepare = (state, previous) => {
   const { ui, renderer } = state

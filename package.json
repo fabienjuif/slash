@@ -7,7 +7,8 @@
   "scripts": {
     "start": "parcel public/index.html -p 3000 --no-hmr",
     "build": "parcel build public/index.html --no-source-maps",
-    "serve": "http-serve dist -p 8080"
+    "serve": "http-serve dist -p 8080",
+    "lint": "eslint src"
   },
   "author": "Fabien JUIF <fabien.juif@gmail.com>",
   "license": "MIT",
@@ -18,8 +19,24 @@
     "pixi.js": "^4.8.1"
   },
   "devDependencies": {
+    "eslint": "^5.4.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
     "http-serve": "^1.0.1",
     "husky": "^1.0.0-rc.13",
     "parcel-bundler": "^1.9.7"
+  },
+  "eslintConfig": {
+    "extends": "airbnb-base",
+    "globals": {
+      "window": true
+    },
+    "rules": {
+      "semi": ["error", "never"],
+      "operator-linebreak": ["error", "after"],
+      "max-len": ["error", 200],
+      "object-curly-newline": "off",
+      "no-param-reassign": "off"
+    }
   }
 }

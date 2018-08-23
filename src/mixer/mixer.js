@@ -1,32 +1,32 @@
 import jump from './jump.mp3'
 import shield from './shield.mp3'
 
-let mixer // singleton
+let instance // singleton
 
 const create = () => {
-  if (mixer) return mixer
+  if (instance) return instance
 
   const sounds = {
     jump: {
       url: jump,
       volume: 1,
       offset: 1,
-      ends: .3,
+      ends: 0.3,
     },
     shield: {
       url: shield,
-      volume: .2,
+      volume: 0.2,
       offset: 11.2,
-      ends: .1,
+      ends: 0.1,
     },
   }
 
-  const soundContext = new AudioContext()
+  const soundContext = new window.AudioContext()
 
-  Object.keys(sounds).forEach(key => {
+  Object.keys(sounds).forEach((key) => {
     const sound = sounds[key]
 
-    const request = new XMLHttpRequest()
+    const request = new window.XMLHttpRequest()
     request.open('GET', sound.url, true)
     request.responseType = 'arraybuffer'
 
@@ -39,12 +39,12 @@ const create = () => {
     request.send()
   })
 
-  mixer = {
+  instance = {
     sounds,
     soundContext,
   }
 
-  return mixer
+  return instance
 }
 
 const play = (mixer, name) => {

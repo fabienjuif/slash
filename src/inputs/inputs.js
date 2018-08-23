@@ -21,9 +21,6 @@ const create = (bindings) => {
 }
 
 const update = (inputs) => {
-  inputs.keyboard = Keyboard.update(inputs.keyboard)
-  inputs.touch = Touch.update(inputs.touch)
-
   const { codes, keyboard, touch } = inputs
 
   codes.forEach((code) => {

@@ -1,13 +1,9 @@
 import { Text, Graphics } from 'pixi.js'
-import { random } from 'lodash-es'
-import { World } from 'matter-js'
+import { random } from 'lodash-es'
 import Physics from './physics'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
-import State from '../state'
 import Entity from './entities/entity'
-import Wall from './entities/wall'
-import Player from './entities/player'
 import Skill from './skill'
 import AI from './ai/classic'
 
@@ -19,7 +15,7 @@ const bindings = {
       y: window.innerHeight - 85,
       width: 80,
       height: 80,
-    }
+    },
   },
   shield: {
     keyCode: 86, // v
@@ -78,21 +74,14 @@ const add = (state, entities) => {
   return entities
 }
 
-const create = (renderer, { worldSize }) => {
-  const state = State.create('game', { renderer })
-
-  return Object.assign(
-    state,
-    {
-      ai: [],
-      worldSize,
-      ui: {
-        infos: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
-        touch: new Graphics(),
-      },
-    },
-  )
-}
+const create = ({ worldSize }) => ({
+  ai: [],
+  worldSize,
+  ui: {
+    infos: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
+    touch: new Graphics(),
+  },
+})
 
 const prepare = (state) => {
   const { worldSize } = state
@@ -104,26 +93,29 @@ const prepare = (state) => {
   // - inputs
   // - entity
   state.inputs = Inputs.create(bindings)
-  state.player = add(state, Player.create('player', { world: state.physics.world, inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
+  state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
 
   // walls
   // - outside the level
-  add(state, Wall.create(0, 0, worldSize.x, WALL_WIDTH))
-  add(state, Wall.create(0, 0, WALL_WIDTH, worldSize.y))
-  add(state, Wall.create(worldSize.x - WALL_WIDTH, 0, WALL_WIDTH, worldSize.y))
-  add(state, Wall.create(0, worldSize.y - WALL_WIDTH, worldSize.x, WALL_WIDTH))
+  add(state, Entity.create('wall', { x: 0, y: 0, width: worldSize.x, height: WALL_WIDTH }))
+  add(state, Entity.create('wall', { x: 0, y: 0, width: WALL_WIDTH, height: worldSize.y }))
+  add(state, Entity.create('wall', { x: (worldSize.x - WALL_WIDTH), y: 0, width: WALL_WIDTH, height: worldSize.y }))
+  add(state, Entity.create('wall', { x: 0, y: (worldSize.y - WALL_WIDTH), width: worldSize.x, height: WALL_WIDTH }))
   // - inside the level
   for (let i = 0; i < worldSize.x / WALL_WIDTH; i += 1) {
     for (let j = 0; j < worldSize.y / WALL_WIDTH; j += 1) {
       if (random(0, 10) === 0) {
-        add(state, Wall.create(i * WALL_WIDTH, j * WALL_WIDTH, WALL_WIDTH, WALL_WIDTH))
+        add(state, Entity.create('wall', { x: (i * WALL_WIDTH), y: (j * WALL_WIDTH), width: WALL_WIDTH, height: WALL_WIDTH }))
       }
     }
   }
 
   // AI
   state.ai = Array.from({ length: 2 }).map(() => AI.create(state))
-  add(state, state.ai.map((inputs) => Player.create('ai', { inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
+  const aiEntities = add(state, state.ai.map(inputs => Entity.create('player', { id: 'ai', inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
+  aiEntities.forEach((entity) => {
+    entity.inputs.entity = entity
+  })
 
   // add entities to renderer
   const { player, ui, renderer, physics } = state
@@ -149,12 +141,11 @@ const update = (state, delta) => {
   Physics.update(physics, delta)
 
   // update ui
-  const print = ['jump', 'shield'].map(skillName => {
-    const { bindings } = player.inputs
+  const print = ['jump', 'shield'].map((skillName) => {
     const skill = player.skills[skillName]
     const cooldown = Skill.isCooldown(skill) ? `${skill.next - Date.now()}`.padStart(7, ' ') : 'ready !'
 
-    const bindTxt = bindings ? ` (${String.fromCharCode(player.inputs.bindings[skillName])})`: ''
+    const bindTxt = bindings ? ` (${String.fromCharCode(bindings[skillName].keyCode)})` : ''
     return `${skillName}${bindTxt}: ${cooldown}`
   })
   print.push(`${Math.floor(player.hp)} HP`)

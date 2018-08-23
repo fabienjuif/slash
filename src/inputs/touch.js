@@ -69,7 +69,7 @@ const create = (bindings) => {
 }
 
 const clear = (inputs) => {
-  const { handle, handleStop } = inputs
+  const { handle, handleStop } = inputs
 
   window.removeEventListener('touchstart', handle)
   window.removeEventListener('touchmove', handle)
@@ -83,5 +83,4 @@ const clear = (inputs) => {
 export default {
   create,
   clear,
-  update: inputs => inputs,
 }

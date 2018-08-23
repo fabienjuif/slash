@@ -2,7 +2,7 @@ import { Container, autoDetectRenderer } from 'pixi.js'
 import Viewport from 'pixi-viewport'
 import { Render } from 'matter-js'
 
-const reset = (renderer) => {
+const clear = (renderer) => {
   const {
     worldWidth,
     worldHeight,
@@ -22,14 +22,12 @@ const reset = (renderer) => {
 }
 
 const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = false } = {}) => {
-  let renderer
   let viewport
   let stage
 
-  const innerRenderer = {
+  const renderer = {
     follow: undefined,
     followed: false,
-    entities: [],
     viewport,
     stage,
     matter,
@@ -40,8 +38,8 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
   }
 
   if (matter) {
-    innerRenderer.renderer = Render.create({
-      element: document.body,
+    renderer.renderer = Render.create({
+      element: window.document.body,
       engine: matter,
       options: {
         width: screenWidth,
@@ -61,21 +59,21 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
       },
     })
 
-    Render.run(renderer)
+    Render.run(renderer.renderer)
   } else {
-    innerRenderer.renderer = autoDetectRenderer(screenWidth, screenHeight, {
+    renderer.renderer = autoDetectRenderer(screenWidth, screenHeight, {
       backgroundColor: 0x000000,
     })
-    document.body.appendChild(innerRenderer.renderer.view)
+    window.document.body.appendChild(renderer.renderer.view)
 
-    reset(innerRenderer)
+    clear(renderer)
   }
 
-  return innerRenderer
+  return renderer
 }
 
 const update = (renderer) => {
-  const { matter, follow, entities } = renderer
+  const { matter, follow } = renderer
 
   if (matter) {
     if (follow) {
@@ -86,26 +84,18 @@ const update = (renderer) => {
   }
 }
 
-const add = (renderer, entities) => {
-  renderer.entities = renderer.entities.concat(entities)
-}
-
 const addToViewport = (renderer, entities) => {
   const { matter, viewport } = renderer
   if (matter) return
 
-  add(renderer, entities)
-
-  return [].concat(entities).map(entity => viewport.addChild(entity.graphics))
+  [].concat(entities).map(entity => viewport.addChild(entity.graphics))
 }
 
 const addToStage = (renderer, entities) => {
   const { matter, stage } = renderer
   if (matter) return
 
-  add(renderer, entities)
-
-  return [].concat(entities).map(entity => stage.addChild(entity.graphics))
+  [].concat(entities).map(entity => stage.addChild(entity.graphics))
 }
 
 const follow = (renderer, entity) => {
@@ -125,5 +115,5 @@ export default {
   addToStage,
   addToViewport,
   follow,
-  reset,
+  clear,
 }

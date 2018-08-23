@@ -13,7 +13,7 @@ const create = (bindings) => {
   const reactKey = ({ keyCode, type }) => {
     if (!keyCodes.includes(keyCode)) return
 
-    const code = codes.find(code => bindings[code].keyCode === keyCode)
+    const code = codes.find(c => bindings[c].keyCode === keyCode)
     keys[code] = (type === 'keydown')
   }
 
@@ -38,5 +38,4 @@ const clear = (inputs) => {
 export default {
   create,
   clear,
-  update: inputs => inputs,
 }

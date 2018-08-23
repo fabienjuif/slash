@@ -15,9 +15,9 @@ const create = () => {
 
   // register collisions
   Events.on(engine, 'collisionStart', (event) => {
-    var pairs = event.pairs
+    const { pairs } = event
 
-    for (var i = 0; i < pairs.length; i++) {
+    for (let i = 0; i < pairs.length; i += 1) {
       const { bodyA, bodyB } = pairs[i]
 
       Entity.collides(bodyA.entity, bodyB.entity, pairs[i])
@@ -45,15 +45,15 @@ const update = (physics, delta) => {
 
     World.remove(engine.world, entity.body)
     Entity.clear(entity)
-  })
 
-  console.log(entities.length)
+    return false
+  })
 
   // engine
   // - run the engine several times, so we have the feeling the game is fast
   // - also, this avoid collision detecting issue since CCD is not implemented yet in matter-js
   let lastLoop = Date.now()
-  for (let i = 0; i < perLoop; ++i) {
+  for (let i = 0; i < perLoop; i += 1) {
     Engine.update(engine, i === 0 ? delta : (Date.now() - lastLoop))
     lastLoop = Date.now()
   }

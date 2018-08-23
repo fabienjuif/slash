@@ -1,24 +1,22 @@
 import { Common } from 'matter-js'
 
-const create = (game) => {
-  return {
-    id: 'ai-classic',
-    game,
-    entity: undefined,
-    lastxDirection: 0,
-    lastyDirection: 0,
-    player: game.physics.entities.find(entity => entity.id === 'player'),
-    keys: {
-      up: false,
-      down: false,
-      left: false,
-      right: false,
-      shield: false,
-      jump: false,
-      enter: false,
-    },
-  }
-}
+const create = game => ({
+  id: 'ai-classic',
+  game,
+  entity: undefined,
+  lastxDirection: 0,
+  lastyDirection: 0,
+  player: game.physics.entities.find(entity => entity.id === 'player'),
+  keys: {
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+    shield: false,
+    jump: false,
+    enter: false,
+  },
+})
 
 const update = (ai) => {
   const { entity, player, lastxDirection, lastyDirection, keys } = ai

@@ -4,20 +4,25 @@ import Game from './game/state'
 import Gameover from './gameover/state'
 import Welcome from './welcome/state'
 
-const create = (id, { renderer }) => {
+const create = (id, renderer, options) => {
   const fps = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
   fps.position.y = 30
   fps.position.x = window.innerWidth - 50
 
-  return {
-    id,
-    inputType: 'keyboard',
-    renderer,
-    fps,
-    inputs: {},
-    lastFPS: [],
-    entities: [],
-  }
+  let state
+  if (id === 'game') state = Game.create(options)
+  if (id === 'gameover') state = Gameover.create(options)
+  if (id === 'welcome') state = Welcome.create(options)
+
+  return Object.assign(
+    state,
+    {
+      id,
+      renderer,
+      fps,
+      lastFPS: [],
+    },
+  )
 }
 
 const update = (state, delta) => {
@@ -31,15 +36,15 @@ const update = (state, delta) => {
   }
 
   // update scene based on state
-  let newState
-  if (id === 'game') newState = Game.update(state, delta)
-  else if (id === 'gameover') newState = Gameover.update(state, delta)
-  else if (id === 'welcome') newState = Welcome.update(state, delta)
+  let newStateId
+  if (id === 'game') newStateId = Game.update(state, delta)
+  else if (id === 'gameover') newStateId = Gameover.update(state, delta)
+  else if (id === 'welcome') newStateId = Welcome.update(state, delta)
 
   // draw
   Renderer.update(renderer)
 
-  return newState
+  return newStateId
 }
 
 const prepare = (state, previous) => {
@@ -48,8 +53,8 @@ const prepare = (state, previous) => {
   // get if touched
   if (previous) state.isTouched = previous.isTouched
 
-  // reset rendrer
-  Renderer.reset(renderer)
+  // clear renderer
+  Renderer.clear(renderer)
 
   // add to stage
   Renderer.addToStage(renderer, { graphics: fps })
@@ -61,7 +66,7 @@ const prepare = (state, previous) => {
 }
 
 const clear = (state) => {
-  const { id } = state
+  const { id } = state
 
   if (id === 'game') Game.clear(state)
   else if (id === 'gameover') Gameover.clear(state)

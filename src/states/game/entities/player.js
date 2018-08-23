@@ -1,35 +1,25 @@
 import { Graphics } from 'pixi.js'
 import { Bodies, Body, Vector, Pair } from 'matter-js'
 import Skill from '../skill'
-import Entity from './entity'
 
-const create = (id, { x, y, inputs, color = 0xff00ff }) => {
-  const body = Bodies.circle(x, y, 35)
-  const graphics = new Graphics()
-
+const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
   const skills = {
     jump: Skill.create('jump', { cooldown: 1000, last: 100 }),
     shield: Skill.create('shield', { cooldown: 90, last: 100 }),
     dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
   }
 
-  const entity = Object.assign(
-    Entity.create('player', { graphics, body, inputs }),
-    {
-      id,
-      color,
-      looking: { x: 1, y: 0 },
-      moving: { x: 0, y: 0 },
-      hp: 100,
-      skills,
-    },
-  )
-
-  if (inputs) {
-    inputs.entity = entity
+  return {
+    graphics: new Graphics(),
+    body: Bodies.circle(x, y, 35),
+    inputs,
+    id,
+    color,
+    looking: { x: 1, y: 0 },
+    moving: { x: 0, y: 0 },
+    hp: 100,
+    skills,
   }
-
-  return entity
 }
 
 const update = (player) => {
@@ -37,7 +27,8 @@ const update = (player) => {
   const { jump, shield, dead } = skills
   const { keys } = inputs
 
-  if (Skill.isCooldown(dead)) return
+  // if player is dead for good (after channeling effect we ask for removal)
+  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) return false
 
   if (keys.jump) Skill.trigger(jump)
   if (keys.shield) Skill.trigger(shield)
@@ -67,9 +58,6 @@ const update = (player) => {
   // check if player is not dead
   if (player.hp > 0) return true
   Skill.trigger(dead)
-
-  // if player is dead for good (after channeling effect we ask for removal)
-  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) return false
 
   return true
 }

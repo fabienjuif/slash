@@ -1,28 +1,24 @@
 import Renderer from './renderer/renderer'
-import Game from './states/game/state'
-import Gameover from './states/gameover/state'
-import Welcome from './states/welcome/state'
 import State from './states/state'
 
 const TEST_PERF = false
 const FAST = false || TEST_PERF
-const PIXI = true
 
 const worldSize = {
   x: 3200,
   y: 2400,
 }
 
-const renderer = Renderer.create(window.innerWidth, window.innerHeight, worldSize.x, worldSize.y, { matter: PIXI ? undefined : physics.engine })
+const renderer = Renderer.create(window.innerWidth, window.innerHeight, worldSize.x, worldSize.y)
 
 const states = {
-  game: Game.create(renderer, { worldSize }),
-  gameover: Gameover.create(renderer),
-  welcome: Welcome.create(renderer),
+  game: State.create('game', renderer, { worldSize }),
+  gameover: State.create('gameover', renderer),
+  welcome: State.create('welcome', renderer),
 }
 
-let previousState
-let state = 'welcome'
+let previousStateId
+let stateId = 'welcome'
 let lastLoop = Date.now()
 let nbLoops = 0
 const start = Date.now()
@@ -43,18 +39,18 @@ const loop = () => {
   lastLoop = now
 
   // prepare next state
-  if (previousState !== state) {
-    State.prepare(states[state], states[previousState])
+  const state = states[stateId]
+  if (previousStateId !== stateId) {
+    const previous = states[previousStateId]
 
-    if (previousState) {
-      State.clear(states[previousState])
-    }
+    State.prepare(state, previous)
+    if (previous) State.clear(previous)
 
-    previousState = state
+    previousStateId = stateId
   }
 
   // update current state
-  state = State.update(states[state], delta) || state
+  stateId = State.update(state, delta) || stateId
 
   // register next loop
   if (FAST) setTimeout(loop, 0)

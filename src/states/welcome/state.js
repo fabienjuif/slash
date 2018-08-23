@@ -1,6 +1,5 @@
-import { Text, Container, Graphics } from 'pixi.js'
+import { Text, Container } from 'pixi.js'
 import Renderer from '../../renderer/renderer'
-import State from '../state'
 import Inputs from '../../inputs/inputs'
 
 const bindings = {
@@ -15,36 +14,36 @@ const bindings = {
   },
 }
 
-const create = (renderer) => {
-  const state = State.create('welcome', { renderer })
-
-  state.inputs = undefined
-  state.ui = new Container()
+const create = () => {
+  const state = {
+    inputs: undefined,
+    ui: new Container(),
+  }
 
   let x = 0
   let y = 0
-  const text = (text) => {
+  const printText = (text) => {
     const textContainer = state.ui.addChild(new Text(text, { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))
     textContainer.x = x
     textContainer.y = y
 
-    y+= 20
+    y += 20
   }
-  text('Welcome to slash')
+  printText('Welcome to slash')
   x += 100
   y += 50
-  text('Here are the rules')
-  text('You have two skills to learn:')
-  x +=100
-  text('1. <C> to SLASH')
-  text('2. <V> to shield')
-  x -=100
+  printText('Here are the rules')
+  printText('You have two skills to learn:')
+  x += 100
+  printText('1. <C> to SLASH')
+  printText('2. <V> to shield')
+  x -= 100
   y += 50
-  text('You are against 2 AI, try to kill them by slashing through them!')
+  printText('You are against 2 AI, try to kill them by slashing through them!')
   y += 50
-  text('Press <enter> to start ⚡️')
+  printText('Press <enter> to start ⚡️')
   y += 50
-  text('Or <touch> here (mobile)')
+  printText('Or <touch> here (mobile)')
 
   return state
 }

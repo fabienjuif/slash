@@ -107,7 +107,7 @@ const collides = (entity, other, pair) => {
 const clear = (player) => {
   const { graphics } = player
 
-  graphics.clear()
+  graphics.destroy({ children: true, texture: true })
 }
 
 export default {

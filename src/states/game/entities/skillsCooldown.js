@@ -27,7 +27,7 @@ const draw = (ui) => {
 const clear = (ui) => {
   const { graphics } = ui
 
-  graphics.clear()
+  graphics.destroy({ children: true, texture: true })
 }
 
 export default {

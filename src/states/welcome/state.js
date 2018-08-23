@@ -1,6 +1,6 @@
-import { Text, Container } from 'pixi.js'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
+import Entity from './entities/entity'
 
 const bindings = {
   enter: {
@@ -14,46 +14,20 @@ const bindings = {
   },
 }
 
-const create = () => {
-  const state = {
-    inputs: undefined,
-    ui: new Container(),
-  }
-
-  let x = 0
-  let y = 0
-  const printText = (text) => {
-    const textContainer = state.ui.addChild(new Text(text, { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))
-    textContainer.x = x
-    textContainer.y = y
-
-    y += 20
-  }
-  printText('Welcome to slash')
-  x += 100
-  y += 50
-  printText('Here are the rules')
-  printText('You have two skills to learn:')
-  x += 100
-  printText('1. <C> to SLASH')
-  printText('2. <V> to shield')
-  x -= 100
-  y += 50
-  printText('You are against 2 AI, try to kill them by slashing through them!')
-  y += 50
-  printText('Press <enter> to start ⚡️')
-  y += 50
-  printText('Or <touch> here (mobile)')
-
-  return state
-}
+const create = () => ({
+  inputs: undefined,
+  entities: [],
+  staticEntities: [],
+})
 
 const prepare = (state) => {
-  const { ui, renderer } = state
+  const { renderer, staticEntities } = state
 
   state.inputs = Inputs.create(bindings)
 
-  Renderer.addToStage(renderer, { graphics: ui })
+  state.staticEntities.push(Entity.create('ui'))
+
+  Renderer.addToStage(renderer, staticEntities)
 }
 
 const update = (state) => {
@@ -70,8 +44,13 @@ const update = (state) => {
   return 'welcome'
 }
 
+// TODO: merge code about this (in states)
 const clear = (state) => {
   Inputs.clear(state.inputs)
+  state.entities.forEach(Entity.clear)
+  state.staticEntities.forEach(Entity.clear)
+  state.entities = []
+  state.staticEntities = []
 }
 
 export default {

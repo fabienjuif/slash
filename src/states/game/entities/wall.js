@@ -30,7 +30,7 @@ const draw = (wall) => {
 const clear = (wall) => {
   const { graphics } = wall
 
-  graphics.clear()
+  graphics.destroy({ children: true, texture: true })
 }
 
 export default {

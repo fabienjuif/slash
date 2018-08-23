@@ -1,6 +1,6 @@
-import { Text } from 'pixi.js'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
+import Entity from './entities/entity'
 
 const bindings = {
   enter: {
@@ -15,33 +15,19 @@ const bindings = {
 }
 
 const create = () => ({
-  ui: new Text('Gameover', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
+  entities: [],
+  staticEntities: [],
   inputs: undefined,
 })
 
 const prepare = (state, previous) => {
-  const { ui, renderer } = state
-  const { player } = previous
+  const { renderer, staticEntities } = state
 
   state.inputs = Inputs.create(bindings)
 
-  Renderer.addToStage(renderer, { graphics: ui })
+  state.staticEntities.push(Entity.create('ui', { player: previous.player }))
 
-  const whyStr = player.hp > 0 ? 'You win 💪' : 'You loose 😱'
-  const why = new Text(whyStr, { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  why.position.x = 30
-  why.position.y = 30
-  Renderer.addToStage(renderer, { graphics: why })
-
-  const hint = new Text('Press <enter> to restart', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  hint.position.x = 30
-  hint.position.y = 60
-  Renderer.addToStage(renderer, { graphics: hint })
-
-  const touch = new Text('Or <touch> here (mobile)', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  touch.position.x = 95
-  touch.position.y = 340
-  Renderer.addToStage(renderer, { graphics: touch })
+  Renderer.addToStage(renderer, staticEntities)
 }
 
 const update = (state) => {
@@ -53,8 +39,13 @@ const update = (state) => {
   return 'gameover'
 }
 
+// TODO: merge code about this (in states)
 const clear = (state) => {
   Inputs.clear(state.inputs)
+  state.entities.forEach(Entity.clear)
+  state.staticEntities.forEach(Entity.clear)
+  state.entities = []
+  state.staticEntities = []
 }
 
 export default {

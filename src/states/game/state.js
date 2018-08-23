@@ -158,6 +158,8 @@ const update = (state, delta) => {
 
 const clear = (state) => {
   Inputs.clear(state.inputs)
+  state.entities.forEach(Entity.clear)
+  state.staticEntities.forEach(Entity.clear)
   state.entities = []
   state.staticEntities = []
 }

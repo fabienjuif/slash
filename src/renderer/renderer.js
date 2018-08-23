@@ -86,16 +86,20 @@ const update = (renderer) => {
 
 const addToViewport = (renderer, entities) => {
   const { matter, viewport } = renderer
-  if (matter) return
+  if (matter) return entities; // TODO: remove semicolon with flatten
 
   [].concat(entities).map(entity => viewport.addChild(entity.graphics))
+
+  return entities
 }
 
 const addToStage = (renderer, entities) => {
   const { matter, stage } = renderer
-  if (matter) return
+  if (matter) return entities; // TODO: remove semicolon with flatten
 
   [].concat(entities).map(entity => stage.addChild(entity.graphics))
+
+  return entities
 }
 
 const follow = (renderer, entity) => {

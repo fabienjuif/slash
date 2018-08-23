@@ -9,7 +9,6 @@ const create = () => {
   const physics = {
     engine,
     world: engine.world,
-    entities: [],
     perLoop: 2,
   }
 
@@ -29,24 +28,21 @@ const create = () => {
 }
 
 const add = (physics, entities) => {
-  physics.entities = physics.entities.concat(entities)
   World.add(physics.world, [].concat(entities).map(entity => entity.body))
 }
 
 const update = (physics, delta) => {
-  const { entities, perLoop, engine } = physics
+  const { perLoop, engine, world } = physics
+  const { bodies } = world
 
   // entities
   // - remove them is not alive anymore
-  physics.entities = entities.filter((entity) => {
-    Body.setAngle(entity.body, 0) // FIXME: look at friction, etc on bodies to avoid them to turn instead of doing this
+  bodies.forEach((body) => {
+    const { entity } = body
 
-    if (Entity.update(entity)) return true
+    Body.setAngle(body, 0) // FIXME: look at friction, etc on bodies to avoid them to turn instead of doing this
 
-    World.remove(engine.world, entity.body)
-    Entity.clear(entity)
-
-    return false
+    if (!Entity.update(entity)) World.remove(engine.world, body)
   })
 
   // engine

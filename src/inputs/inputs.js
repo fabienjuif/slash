@@ -15,6 +15,7 @@ const create = (bindings) => {
   return {
     codes,
     keys,
+    bindings,
     keyboard: Keyboard.create(bindings),
     touch: Touch.create(bindings),
   }

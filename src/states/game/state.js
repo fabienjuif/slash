@@ -1,10 +1,8 @@
-import { Text, Graphics } from 'pixi.js'
 import { random } from 'lodash-es'
 import Physics from './physics'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
 import Entity from './entities/entity'
-import Skill from './skill'
 import AI from './ai/classic'
 
 const bindings = {
@@ -71,20 +69,20 @@ const add = (state, entities) => {
 
   Physics.add(physics, entities)
 
+  state.entities = state.entities.concat(entities)
+
   return entities
 }
 
 const create = ({ worldSize }) => ({
   ai: [],
   worldSize,
-  ui: {
-    infos: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
-    touch: new Graphics(),
-  },
+  entities: [],
+  staticEntities: [],
 })
 
 const prepare = (state) => {
-  const { worldSize } = state
+  const { worldSize, isTouched } = state
 
   // create physic engine
   state.physics = Physics.create()
@@ -117,19 +115,22 @@ const prepare = (state) => {
     entity.inputs.entity = entity
   })
 
+  // UI
+  if (isTouched) state.staticEntities.push(Entity.create('touchUI', { inputs: state.inputs }))
+  state.staticEntities.push(Entity.create('skillsCooldown', { player: state.player }))
+
   // add entities to renderer
-  const { player, ui, renderer, physics } = state
+  const { player, renderer, staticEntities, entities } = state
   Renderer.addToStage(renderer, { graphics: renderer.viewport })
-  Renderer.addToStage(renderer, { graphics: ui.infos })
-  Renderer.addToStage(renderer, { graphics: ui.touch })
-  Renderer.addToViewport(renderer, physics.entities)
+  Renderer.addToStage(renderer, staticEntities)
+  Renderer.addToViewport(renderer, entities)
 
   // follow the player (camera)
   Renderer.follow(renderer, player)
 }
 
 const update = (state, delta) => {
-  const { physics, player, ui, isTouched, ai } = state
+  const { physics, player, staticEntities, ai, entities } = state
 
   // update player inputs
   state.inputs = Inputs.update(state.inputs)
@@ -137,50 +138,19 @@ const update = (state, delta) => {
   // update ai
   ai.forEach(AI.update)
 
-  // update physics (and entities)
+  // update physics (and its entities)
   Physics.update(physics, delta)
 
-  // update ui
-  const print = ['jump', 'shield'].map((skillName) => {
-    const skill = player.skills[skillName]
-    const cooldown = Skill.isCooldown(skill) ? `${skill.next - Date.now()}`.padStart(7, ' ') : 'ready !'
-
-    const bindTxt = bindings ? ` (${String.fromCharCode(bindings[skillName].keyCode)})` : ''
-    return `${skillName}${bindTxt}: ${cooldown}`
-  })
-  print.push(`${Math.floor(player.hp)} HP`)
-  ui.infos.text = print.join(' | ')
-
-  // touch ui
-  if (isTouched) {
-    const { jump, shield, up, down, left, right } = player.inputs.keys
-
-    ui.touch.clear()
-    // - shield
-    ui.touch.beginFill(0x42B37F)
-    ui.touch.drawCircle(window.innerWidth - 45, window.innerHeight - 100, shield ? 35 : 40)
-    ui.touch.endFill()
-    // - jump
-    ui.touch.beginFill(0xAE2D2D)
-    ui.touch.drawCircle(window.innerWidth - 110, window.innerHeight - 45, jump ? 35 : 40)
-    ui.touch.endFill()
-    // - stick (outline)
-    ui.touch.lineStyle(2, 0xffffff)
-    ui.touch.drawCircle(105, window.innerHeight - 105, 100)
-    ui.touch.endFill()
-    // - stick (inner)
-    ui.touch.beginFill(0xffffff)
-    ui.touch.drawCircle(105 + (left ? -30 : 0) + (right ? 30 : 0), window.innerHeight - 105 + (up ? -30 : 0) + (down ? 30 : 0), 25)
-    ui.touch.endFill()
-  }
+  // draw static entities
+  state.staticEntities = staticEntities.filter(Entity.draw)
 
   // draw entities
-  physics.entities.forEach(Entity.draw)
+  state.entities = entities.filter(Entity.draw)
 
   // is it gameover ?
   if (
     player.hp <= 0 ||
-    physics.entities.filter(entity => entity.type === 'player').length < 2
+    entities.filter(entity => entity.type === 'player').length < 2
   ) return 'gameover'
 
   return 'game'
@@ -188,6 +158,8 @@ const update = (state, delta) => {
 
 const clear = (state) => {
   Inputs.clear(state.inputs)
+  state.entities = []
+  state.staticEntities = []
 }
 
 export default {

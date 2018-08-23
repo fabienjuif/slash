@@ -27,8 +27,8 @@ const update = (player) => {
   const { jump, shield, dead } = skills
   const { keys } = inputs
 
-  // if player is dead for good (after channeling effect we ask for removal)
-  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) return false
+  // if player is dead we remove it from physical engine
+  if (Skill.isCooldown(dead)) return false
 
   if (keys.jump) Skill.trigger(jump)
   if (keys.shield) Skill.trigger(shield)
@@ -56,8 +56,7 @@ const update = (player) => {
   if (Skill.isChanneling(shield)) player.hp -= (Date.now() - shield.since) / 100
 
   // check if player is not dead
-  if (player.hp > 0) return true
-  Skill.trigger(dead)
+  if (player.hp <= 0) Skill.trigger(dead)
 
   return true
 }
@@ -67,6 +66,9 @@ const draw = (player) => {
   const { jump, shield, dead } = skills
 
   graphics.clear()
+
+  // if player is dead for good (after channeling effect we ask for removal)
+  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) return false
 
   let circleSize = 40
   if (Skill.isChanneling(dead)) circleSize = (dead.until - Date.now()) * 10
@@ -79,6 +81,8 @@ const draw = (player) => {
 
   graphics.drawCircle(body.position.x, body.position.y, circleSize)
   graphics.endFill()
+
+  return true
 }
 
 const collides = (entity, other, pair) => {

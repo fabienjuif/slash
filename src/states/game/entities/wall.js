@@ -15,7 +15,7 @@ const draw = (wall) => {
   const { x, y, width, height, graphics, drew } = wall
 
   // already drew once ? Then this is enough since wall are statics
-  if (drew) return
+  if (drew) return true
   wall.drew = true
 
   graphics.clear()
@@ -23,6 +23,8 @@ const draw = (wall) => {
   graphics.beginFill(0x00ffff)
   graphics.drawRect(x, y, width, height)
   graphics.endFill()
+
+  return true
 }
 
 const clear = (wall) => {

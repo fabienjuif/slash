@@ -2,7 +2,6 @@
  * @param {Object} bindings Object as Map(code -> keyCode)
  */
 const create = (bindings) => {
-  const keyCodes = Object.values(bindings).map(binding => binding.keyCode)
   const codes = Object.keys(bindings)
   const keys = {}
 
@@ -10,11 +9,17 @@ const create = (bindings) => {
     keys[code] = false
   })
 
-  const reactKey = ({ keyCode, type }) => {
-    if (!keyCodes.includes(keyCode)) return
+  const reactKey = (event) => {
+    const { keyCode, type, key } = event
 
-    const code = codes.find(c => bindings[c].keyCode === keyCode)
+    const code = codes.find(c => (
+      bindings[c].keyCode === keyCode ||
+      bindings[c].key === key
+    ))
+    if (!code) return
+
     keys[code] = (type === 'keydown')
+    event.preventDefault()
   }
 
   window.addEventListener('keydown', reactKey)

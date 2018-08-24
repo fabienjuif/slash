@@ -1,5 +1,5 @@
 import { Text } from 'pixi.js'
-import Skill from '../skill'
+import Skill from '../../../skill'
 
 const create = ({ player }) => ({
   graphics: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),

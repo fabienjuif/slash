@@ -1,14 +1,23 @@
 import { Container, Text } from 'pixi.js'
 
-const create = () => {
-  const ui = {
+const create = (state) => {
+  const entity = {
     graphics: new Container(),
+    state,
   }
+
+  return entity
+}
+
+const draw = (entity) => {
+  const { graphics, state } = entity
+
+  graphics.removeChildren()
 
   let x = 0
   let y = 0
   const printText = (text) => {
-    const textContainer = ui.graphics.addChild(new Text(text, { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))
+    const textContainer = graphics.addChild(new Text(text, { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))
     textContainer.x = x
     textContainer.y = y
 
@@ -24,15 +33,20 @@ const create = () => {
   printText('2. <V> to shield')
   x -= 100
   y += 50
-  printText('You are against 2 AI, try to kill them by slashing through them!')
-  y += 50
+  printText(`You are against ${state.iaCount} (press +/- to adjust) AI`)
+  x += 20
+  y += 20
+  printText('Try to kill them by slashing through them!')
+  x -= 20
+  y += 30
   printText('Press <enter> to start ⚡️')
   y += 50
   printText('Or <touch> here (mobile)')
 
-  return ui
+  return true
 }
 
 export default {
   create,
+  draw,
 }

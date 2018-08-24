@@ -1,4 +1,4 @@
-import Mixer from '../../mixer/mixer'
+import Mixer from './mixer/mixer'
 
 const create = (id, { cooldown, last }) => ({
   id,

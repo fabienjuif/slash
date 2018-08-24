@@ -1,5 +1,6 @@
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
+import Skill from '../../skill' // TODO: rename it 'timer' ?
 import Entity from './entities/entity'
 
 const bindings = {
@@ -12,12 +13,22 @@ const bindings = {
       height: 25,
     },
   },
+  more: {
+    key: '+',
+  },
+  less: {
+    key: '-',
+  },
 }
 
 const create = () => ({
   inputs: undefined,
+  iaCount: 2, // TODO: rename aiCount
   entities: [],
   staticEntities: [],
+  skills: {
+    ai: Skill.create('ai', { cooldown: 150, last: 0 }),
+  },
 })
 
 const prepare = (state) => {
@@ -25,21 +36,31 @@ const prepare = (state) => {
 
   state.inputs = Inputs.create(bindings)
 
-  state.staticEntities.push(Entity.create('ui'))
+  staticEntities.push(Entity.create('ui', state))
 
   Renderer.addToStage(renderer, staticEntities)
 }
 
 const update = (state) => {
-  state.inputs = Inputs.update(state.inputs)
-
-  const { inputs } = state
+  const { inputs, staticEntities, skills } = state
   const { keys, touch } = inputs
+
+  state.inputs = Inputs.update(inputs)
 
   if (keys.enter) {
     state.isTouched = !!touch.keys.enter
     return 'game'
   }
+
+  // TODO: move this into UI entity ?
+  if (!Skill.isCooldown(skills.ai)) {
+    if (keys.more || keys.less) Skill.trigger(skills.ai)
+    if (keys.more) state.iaCount += 1
+    if (keys.less) state.iaCount -= 1
+    if (state.iaCount < 1) state.iaCount = 1
+  }
+
+  state.staticEntities = staticEntities.filter(Entity.draw)
 
   return 'welcome'
 }

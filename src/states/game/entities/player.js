@@ -1,7 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js'
 import { Bodies, Body, Vector, Pair } from 'matter-js'
 import Sprites from '../../../sprites'
-import Skill from '../skill'
+import Skill from '../../../skill'
 
 const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
   const skills = {

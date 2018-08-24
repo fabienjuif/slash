@@ -1,6 +1,6 @@
 import { Container, Graphics } from 'pixi.js'
 import { Bodies, Body, Vector, Pair } from 'matter-js'
-import Animations from '../../../animations'
+import Sprites from '../../../sprites'
 import Skill from '../skill'
 
 const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
@@ -18,15 +18,15 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     color,
     looking: { x: 1, y: 0 },
     moving: { x: 0, y: 0 },
-    hp: 100,
+    hp: Infinity,
     skills,
   }
 
-  const animations = Animations.create()
+  const sprites = Sprites.create()
   Promise
-    .all(Animations.load(animations, '/textures.json'))
+    .all(Sprites.load(sprites, '/textures.json', true))
     .then(() => {
-      entity.animations = Animations.asAnimatedSprites(animations, ['adventurer-hurt', 'adventurer-attack1', 'adventurer-run', 'adventurer-smrslt', 'adventurer-idle'])
+      entity.animations = Sprites.asAnimatedSprites(sprites, ['adventurer-hurt', 'adventurer-attack1', 'adventurer-run', 'adventurer-smrslt', 'adventurer-idle'])
       entity.animations.forEach((animation) => {
         animation.animationSpeed = 0.2
         animation.scale = { x: 2, y: 2 }

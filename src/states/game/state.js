@@ -87,6 +87,9 @@ const prepare = (state) => {
   // create physic engine
   state.physics = Physics.create()
 
+  // grass
+  state.entities.push(Entity.create('grass', { width: worldSize.x, height: worldSize.y }))
+
   // player
   // - inputs
   // - entity

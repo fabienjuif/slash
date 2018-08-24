@@ -5,7 +5,7 @@ import Skill from '../skill'
 
 const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
   const skills = {
-    jump: Skill.create('jump', { cooldown: 1000, last: 100 }),
+    jump: Skill.create('jump', { cooldown: 3000, last: 100 }),
     shield: Skill.create('shield', { cooldown: 90, last: 100 }),
     dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
     invulnerability: Skill.create('invulnerability', { cooldown: 0, last: 500 }),
@@ -160,16 +160,20 @@ const collides = (entity, other, pair) => {
   // inactive so both bodies can pass through
   Pair.setActive(pair, false)
 
-  // someone that sucessfully touch an other player get its jump cooldown reset
-  // FIXME: don't mutate object
-  entity.skills.jump.next = Date.now()
-
   // other entity loose hp
   // FIXME: don't mutate object
   other.hp -= 50
 
   // other entity becomes invulnerable
   Skill.trigger(other.skills.invulnerability)
+
+  // someone that sucessfully touch an other player
+  // - gets its jump cooldown reset
+  //   > this is not reset to Date.now() because the player certainly can't release the skill in 0ms
+  // - steal some life
+  entity.skills.jump.next = Date.now() + 200
+  entity.hp += 20
+  if (entity.hp > 100) entity.hp = 100
 }
 
 export default {

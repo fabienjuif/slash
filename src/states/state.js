@@ -56,13 +56,13 @@ const prepare = (state, previous) => {
   // clear renderer
   Renderer.clear(renderer)
 
-  // add to stage
-  Renderer.addToStage(renderer, { graphics: fps })
-
   // call other prepare
   if (id === 'game') Game.prepare(state, previous)
   else if (id === 'gameover') Gameover.prepare(state, previous)
   else if (id === 'welcome') Welcome.prepare(state, previous)
+
+  // add FPS stage
+  Renderer.addToStage(renderer, { graphics: fps })
 }
 
 const clear = (state) => {

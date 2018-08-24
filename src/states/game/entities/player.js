@@ -8,6 +8,7 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     jump: Skill.create('jump', { cooldown: 1000, last: 100 }),
     shield: Skill.create('shield', { cooldown: 90, last: 100 }),
     dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
+    invulnerability: Skill.create('invulnerability', { cooldown: 0, last: 500 }),
   }
 
   const entity = {
@@ -20,6 +21,7 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     moving: { x: 0, y: 0 },
     hp: 100,
     skills,
+    invulnerabilityEffect: 0,
   }
 
   const sprites = Sprites.create()
@@ -89,7 +91,7 @@ const update = (player) => {
 
 const draw = (player) => {
   const { skills, animations, inputs, graphics, body, hp } = player
-  const { jump, shield, dead } = skills
+  const { jump, shield, dead, invulnerability } = skills
   const { up, down, left, right } = inputs.keys
 
   if (!animations) return true
@@ -125,6 +127,18 @@ const draw = (player) => {
   lifebar.drawRect(-20, -50, 40 * (hp / 100), 5)
   lifebar.endFill()
 
+  // show invulnerability
+  if (Skill.isChanneling(invulnerability)) {
+    player.invulnerabilityEffect += 1
+    if (player.invulnerabilityEffect % 5 === 0) {
+      graphics.alpha = graphics.alpha === 0.5 ? 0.1 : 0.5
+    }
+  } else {
+    player.invulnerabilityEffect = 0
+    graphics.alpha = 1
+  }
+
+  // move graphics
   graphics.position.x = body.position.x
   graphics.position.y = body.position.y
 
@@ -135,8 +149,13 @@ const collides = (entity, other, pair) => {
   // if other entity is not a player, it does nothing
   if (other.type !== 'player') return
 
-  // entityA is not a slasher -> do nothing
-  if (!Skill.isChanneling(entity.skills.jump) || Skill.isChanneling(other.skills.shield)) return
+  // does nothing if
+  // - entity is not a slasher
+  // - other channeling its shield
+  // - other is invulnerable
+  if (!Skill.isChanneling(entity.skills.jump)) return
+  if (Skill.isChanneling(other.skills.shield)) return
+  if (Skill.isChanneling(other.skills.invulnerability)) return
 
   // inactive so both bodies can pass through
   Pair.setActive(pair, false)
@@ -144,11 +163,13 @@ const collides = (entity, other, pair) => {
   // someone that sucessfully touch an other player get its jump cooldown reset
   // FIXME: don't mutate object
   entity.skills.jump.next = Date.now()
-  // entity.skills.jump.until += 100
 
   // other entity loose hp
   // FIXME: don't mutate object
-  other.hp -= 20 // the player will be 'dead' in next frame (next update)
+  other.hp -= 50
+
+  // other entity becomes invulnerable
+  Skill.trigger(other.skills.invulnerability)
 }
 
 export default {

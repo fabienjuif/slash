@@ -15,8 +15,11 @@ const create = ({ player }) => {
     y += 20
   }
   printText(player.hp > 0 ? 'You win 💪' : 'You loose 😱')
-  x += 100
-  y += 250
+  x += 20
+  y += 100
+  printText(`You did ${player.kills} kill(s) !`)
+  x += 80
+  y += 150
   printText('Press <enter> to restart')
   y += 50
   printText('Or <touch> here (mobile)')

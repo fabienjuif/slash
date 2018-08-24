@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js'
+import { Container, Graphics, Text } from 'pixi.js'
 import { Bodies, Body, Vector, Pair } from 'matter-js'
 import Sprites from '../../../sprites'
 import Skill from '../skill'
@@ -21,6 +21,7 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     moving: { x: 0, y: 0 },
     hp: 100,
     skills,
+    kills: 0,
     invulnerabilityEffect: 0,
   }
 
@@ -38,6 +39,20 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
       })
     })
 
+  Promise
+    .all(Sprites.load(sprites, '/static-textures.json', false))
+    .then(() => {
+      // TODO: make it a sub entity
+      const cross = entity.graphics.addChild(Sprites.asTilingSprites(sprites, 'cross'))
+      const killedNumber = entity.graphics.addChild(new Text('0', { fill: 'black', fontFamily: 'Courier New', fontSize: 15 }))
+      killedNumber.name = 'killedNumber'
+      cross.scale = { x: 0.3, y: 0.3 }
+      cross.position.x = 25
+      cross.position.y = -62
+      killedNumber.position.x = 35
+      killedNumber.position.y = -55
+    })
+
   // show collision + IA or not
   const graphics = new Graphics()
   graphics.lineStyle(1, color)
@@ -45,6 +60,7 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
   entity.graphics.addChild(graphics)
 
   // life bar
+  // TODO: make it a sub entity
   entity.graphics.addChild(new Graphics()).name = 'lifebar'
 
   return entity
@@ -84,7 +100,10 @@ const update = (player) => {
   if (Skill.isChanneling(shield)) player.hp -= (Date.now() - shield.since) / 100
 
   // check if player is not dead
-  if (player.hp <= 0) Skill.trigger(dead)
+  if (player.hp <= 0) {
+    if (player.lastTouchedBy) player.lastTouchedBy.kills += 1
+    Skill.trigger(dead)
+  }
 
   return true
 }
@@ -138,6 +157,9 @@ const draw = (player) => {
     graphics.alpha = 1
   }
 
+  // kill number
+  graphics.getChildByName('killedNumber').text = player.kills.toString()
+
   // move graphics
   graphics.position.x = body.position.x
   graphics.position.y = body.position.y
@@ -166,6 +188,9 @@ const collides = (entity, other, pair) => {
 
   // other entity becomes invulnerable
   Skill.trigger(other.skills.invulnerability)
+
+  // register as the player who last touch the other
+  other.lastTouchedBy = entity
 
   // someone that sucessfully touch an other player
   // - gets its jump cooldown reset

@@ -1,5 +1,6 @@
 import { Container } from 'pixi.js'
-import { Bodies, Common } from 'matter-js'
+import { Bodies } from 'matter-js'
+import { choose } from '../../../utils'
 import Sprites from '../../../sprites'
 
 const create = ({ x, y, width, height }) => {
@@ -24,7 +25,7 @@ const create = ({ x, y, width, height }) => {
         .forEach((value, index) => {
           const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
             sprites,
-            Common.choose([
+            choose([
               'generic-rpg-tile47',
               'generic-rpg-tile48',
               'generic-rpg-tile49',
@@ -42,7 +43,7 @@ const create = ({ x, y, width, height }) => {
         .forEach((value, index) => {
           const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
             sprites,
-            Common.choose([
+            choose([
               'generic-rpg-tile10',
               'generic-rpg-tile12',
               'generic-rpg-tile14',
@@ -60,7 +61,7 @@ const create = ({ x, y, width, height }) => {
         .forEach((value, index) => {
           const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
             sprites,
-            Common.choose([
+            choose([
               'generic-rpg-tile02',
               'generic-rpg-tile06',
               'generic-rpg-tile08',
@@ -78,7 +79,7 @@ const create = ({ x, y, width, height }) => {
         .forEach((value, index) => {
           const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
             sprites,
-            Common.choose([
+            choose([
               'generic-rpg-tile52',
               'generic-rpg-tile53',
               'generic-rpg-tile54',

@@ -1,5 +1,5 @@
-import { random } from 'lodash-es'
 import Physics from './physics'
+import { random, chance } from '../../utils'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
 import Entity from './entities/entity'
@@ -105,7 +105,7 @@ const prepare = (state, previous) => {
   // - inside the level
   for (let i = 0; i < worldSize.x / WALL_WIDTH; i += 1) {
     for (let j = 0; j < worldSize.y / WALL_WIDTH; j += 1) {
-      if (random(0, 10) === 0) {
+      if (chance(10)) {
         add(state, Entity.create('wall', { x: (i * WALL_WIDTH), y: (j * WALL_WIDTH), width: WALL_WIDTH, height: WALL_WIDTH }))
       }
     }

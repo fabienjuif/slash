@@ -1,6 +1,6 @@
 import { Container } from 'pixi.js'
-import { Common } from 'matter-js'
 import Sprites from '../../../sprites'
+import { choose } from '../../../utils'
 
 const create = ({ width, height }) => {
   const entity = {
@@ -20,7 +20,7 @@ const create = ({ width, height }) => {
             .forEach((valueY, indexY) => {
               const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
                 sprites,
-                Common.choose([
+                choose([
                   'generic-rpg-tile01',
                   'generic-rpg-tile03',
                   'generic-rpg-tile07',

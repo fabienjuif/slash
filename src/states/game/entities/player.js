@@ -72,8 +72,8 @@ const update = (player) => {
   looking.y = y
 
   // jump skill block the moving one
-  if (Skill.isChanneling(jump)) Body.setVelocity(body, Vector.mult(looking, 20))
-  else Body.setVelocity(body, Vector.mult(moving, 10))
+  if (Skill.isChanneling(jump)) Body.setVelocity(body, Vector.mult(looking, 15))
+  else Body.setVelocity(body, Vector.mult(moving, 5))
 
   // remove some hp when channeling shield
   if (Skill.isChanneling(shield)) player.hp -= (Date.now() - shield.since) / 100
@@ -126,9 +126,10 @@ const collides = (entity, other, pair) => {
   // inactive so both bodies can pass through
   Pair.setActive(pair, false)
 
-  // someone that sucessfully touch an other player get a jump that last longer
+  // someone that sucessfully touch an other player get its jump cooldown reset
   // FIXME: don't mutate object
-  entity.skills.jump.until += 100
+  entity.skills.jump.next = Date.now()
+  // entity.skills.jump.until += 100
 
   // other entity loose hp
   // FIXME: don't mutate object

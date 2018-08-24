@@ -7,10 +7,6 @@ const create = factories => (type, options) => {
   if (!entity) return undefined
 
   const finalEntity = Object.assign(
-    {
-      graphics: undefined,
-      body: undefined,
-    },
     entity,
     {
       type,
@@ -33,7 +29,7 @@ const route = (factories, defaultReturnValue) => fnName => (entity, ...args) => 
 }
 
 const clear = factories => (entity, ...args) => {
-  if (entity.graphics) entity.graphics.destroy({ children: true, texture: true })
+  if (entity.graphics) entity.graphics.destroy({ children: true })
 
   route(factories)('clear')(entity, ...args)
 }

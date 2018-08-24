@@ -141,10 +141,10 @@ const update = (state, delta) => {
   // update physics (and its entities)
   Physics.update(physics, delta)
 
-  // draw static entities
+  // draw static entities (TODO: clear entities that are removed)
   state.staticEntities = staticEntities.filter(Entity.draw)
 
-  // draw entities
+  // draw entities (TODO: clear entities that are removed)
   state.entities = entities.filter(Entity.draw)
 
   // is it gameover ?

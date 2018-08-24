@@ -1,5 +1,6 @@
-import { Graphics } from 'pixi.js'
+import { Container, Graphics } from 'pixi.js'
 import { Bodies, Body, Vector, Pair } from 'matter-js'
+import Animations from '../../../animations'
 import Skill from '../skill'
 
 const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
@@ -9,9 +10,9 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
   }
 
-  return {
-    graphics: new Graphics(),
-    body: Bodies.circle(x, y, 35),
+  const entity = {
+    graphics: new Container(),
+    body: Bodies.circle(x, y, 25),
     inputs,
     id,
     color,
@@ -20,6 +21,28 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     hp: 100,
     skills,
   }
+
+  const animations = Animations.create()
+  Promise
+    .all(Animations.load(animations, '/textures.json'))
+    .then(() => {
+      entity.animations = Animations.asAnimatedSprites(animations, ['adventurer-hurt', 'adventurer-attack1', 'adventurer-run', 'adventurer-smrslt', 'adventurer-idle'])
+      entity.animations.forEach((animation) => {
+        animation.animationSpeed = 0.2
+        animation.scale = { x: 2, y: 2 }
+        animation.position.x = -50
+        animation.position.y = -45
+        entity.graphics.addChild(animation)
+      })
+    })
+
+  // show collision + IA or not
+  const graphics = new Graphics()
+  graphics.lineStyle(1, color)
+  graphics.drawCircle(0, 0, 25)
+  entity.graphics.addChild(graphics)
+
+  return entity
 }
 
 const update = (player) => {
@@ -62,25 +85,33 @@ const update = (player) => {
 }
 
 const draw = (player) => {
-  const { skills, color, graphics, body } = player
+  const { skills, animations, inputs, graphics, body } = player
   const { jump, shield, dead } = skills
+  const { up, down, left, right } = inputs.keys
 
-  graphics.clear()
+  if (!animations) return true
 
   // if player is dead for good (after channeling effect we ask for removal)
-  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) return false
+  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) {
+    graphics.visible = false
+    return false
+  }
 
-  let circleSize = 40
-  if (Skill.isChanneling(dead)) circleSize = (dead.until - Date.now()) * 10
-  if (Skill.isCooldown(jump)) circleSize = 35 // show cooldown
+  animations.forEach((animation) => { animation.visible = false })
 
-  if (!Skill.isChanneling(dead) && Skill.isChanneling(shield)) graphics.beginFill(color)
+  let animationName = 'adventurer-idle'
+  if (Skill.isChanneling(dead)) animationName = 'adventurer-hurt'
+  else if (Skill.isChanneling(jump)) animationName = 'adventurer-attack1'
+  else if (Skill.isChanneling(shield)) animationName = 'adventurer-smrslt' // TODO: how to print both shield + jump ?
+  else if (up || down || left || right) animationName = 'adventurer-run'
+  // TODO: if (Skill.isCooldown(jump)) circleSize = 35 // show cooldown
+  // TODO: REMOVE ? if (!Skill.isChanneling(dead) && Skill.isChanneling(shield)) graphics.beginFill(color)
 
-  graphics.lineStyle(2, color)
-  if (Skill.isChanneling(jump)) graphics.lineStyle(2, 0xffffff)
+  const animation = animations.get(animationName)
+  animation.visible = true
 
-  graphics.drawCircle(body.position.x, body.position.y, circleSize)
-  graphics.endFill()
+  graphics.position.x = body.position.x
+  graphics.position.y = body.position.y
 
   return true
 }

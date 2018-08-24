@@ -1,4 +1,4 @@
-import { loaders, extras } from 'pixi.js'
+import { loaders, extras, Sprite } from 'pixi.js'
 
 // singleton
 let instance
@@ -10,6 +10,7 @@ const create = () => {
     promises: new Map(),
     animations: new Map(),
     textures: new Map(),
+    tilingSprites: new Map(),
   }
 
   return instance
@@ -30,8 +31,11 @@ const load = (sprites, sheetsPaths, isAnimations = false) => {
           const sheet = loader.resources[path].spritesheet
 
           const regexp = /(.*)(-\d+)/ // sprites should be named `<name>-<frameId>` where <frameId> is a number
-          sheet._frameKeys.forEach((key) => { // eslint-disable-line no-underscore-dangle
+          // eslint-disable-next-line no-underscore-dangle
+          const keys = sheet._frameKeys
+          keys.forEach((key) => {
             const texture = sheet.textures[key]
+            texture.baseTexture.mipmap = false
             textures.set(key, texture)
 
             if (isAnimations) {
@@ -80,10 +84,13 @@ const asTilingSprites = (sprites, names) => {
   const tilingSprites = new Map()
   let lastTileingSprite;
   [].concat(names).forEach((name) => {
+    lastTileingSprite = sprites.tilingSprites.get(name)
+
     const texture = textures.get(name)
-    lastTileingSprite = new extras.TilingSprite(texture, texture.width, texture.height)
-    tilingSprites.set(name, lastTileingSprite)
+    lastTileingSprite = Sprite.from(texture)
     lastTileingSprite.visible = true
+
+    tilingSprites.set(name, lastTileingSprite)
   })
 
   return tilingSprites.size === 1 ? lastTileingSprite : tilingSprites

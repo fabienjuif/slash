@@ -1,4 +1,4 @@
-import { Container, autoDetectRenderer } from 'pixi.js'
+import { Container, autoDetectRenderer, settings, SCALE_MODES } from 'pixi.js'
 import Viewport from 'pixi-viewport'
 import { Render } from 'matter-js'
 
@@ -61,9 +61,20 @@ const create = (screenWidth, screenHeight, worldWidth, worldHeight, { matter = f
 
     Render.run(renderer.renderer)
   } else {
-    renderer.renderer = autoDetectRenderer(screenWidth, screenHeight, {
-      backgroundColor: 0x000000,
-    })
+    settings.MIPMAP_TEXTURES = false
+    settings.SCALE_MODE = SCALE_MODES.NEAREST
+
+    renderer.renderer = autoDetectRenderer(
+      screenWidth,
+      screenHeight,
+      {
+        backgroundColor: 0x000000,
+        clearBeforeRender: false,
+        roundPixels: true,
+        forceFXAA: true,
+        powerPreference: 'high-performance',
+      },
+    )
     window.document.body.appendChild(renderer.renderer.view)
 
     clear(renderer)

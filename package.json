@@ -10,9 +10,9 @@
     "parcel:common": "run-s parcel:create parcel:copy",
     "parcel:start": "parcel public/index.html -p 3000 --no-hmr",
     "parcel:build": "parcel build public/index.html --no-source-maps",
-    "start": "run-s parcel:common parcel:start",
-    "build": "run-s parcel:common parcel:build",
-    "serve": "http-serve dist -p 8080",
+    "start": "http-serve dist -p ${PORT:-3000} ",
+    "dev": "run-s parcel:common parcel:start",
+    "install": "run-s parcel:common parcel:build",
     "lint": "eslint src"
   },
   "author": "Fabien JUIF <fabien.juif@gmail.com>",

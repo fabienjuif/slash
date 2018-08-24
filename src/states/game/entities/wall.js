@@ -17,17 +17,6 @@ const create = ({ x, y, width, height }) => {
   Promise
     .all(Sprites.load(sprites, '/static-textures.json', false))
     .then(() => {
-      // - bottom
-      const bottom = Sprites.asTilingSprites(
-        sprites,
-        Common.choose([
-          'generic-rpg-tile52',
-          'generic-rpg-tile53',
-          'generic-rpg-tile54',
-          'generic-rpg-tile55',
-        ]),
-      )
-
       // add them
       // - right
       Array
@@ -116,7 +105,7 @@ const create = ({ x, y, width, height }) => {
 }
 
 const draw = (wall) => {
-  const { x, y, width, height, graphics, drew } = wall
+  const { x, y, graphics, drew } = wall
 
   // already drew once ? Then this is enough since wall are statics
   if (drew) return true

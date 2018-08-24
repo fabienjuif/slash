@@ -18,7 +18,7 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     color,
     looking: { x: 1, y: 0 },
     moving: { x: 0, y: 0 },
-    hp: Infinity,
+    hp: 100,
     skills,
   }
 
@@ -66,10 +66,10 @@ const update = (player) => {
   if (!keys.right && !keys.left) x = 0
 
   // looking to deplacement direction
-  moving.x = x
-  moving.y = y
-  looking.x = x
-  looking.y = y
+  moving.x = (y === 0 ? x : x * 0.62) // 0.62 = 1 - Math.tan(45deg)
+  moving.y = (x === 0 ? y : y * 0.62)
+  looking.x = (y === 0 ? x : x * 0.62)
+  looking.y = (x === 0 ? y : y * 0.62)
 
   // jump skill block the moving one
   if (Skill.isChanneling(jump)) Body.setVelocity(body, Vector.mult(looking, 15))

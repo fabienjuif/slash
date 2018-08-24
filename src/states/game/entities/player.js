@@ -42,6 +42,9 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
   graphics.drawCircle(0, 0, 25)
   entity.graphics.addChild(graphics)
 
+  // life bar
+  entity.graphics.addChild(new Graphics()).name = 'lifebar'
+
   return entity
 }
 
@@ -85,7 +88,7 @@ const update = (player) => {
 }
 
 const draw = (player) => {
-  const { skills, animations, inputs, graphics, body } = player
+  const { skills, animations, inputs, graphics, body, hp } = player
   const { jump, shield, dead } = skills
   const { up, down, left, right } = inputs.keys
 
@@ -109,6 +112,18 @@ const draw = (player) => {
 
   const animation = animations.get(animationName)
   animation.visible = true
+
+  // lifebar
+  const lifebar = graphics.getChildByName('lifebar')
+  lifebar.clear()
+  lifebar.lineStyle(1, 0x734C4C, 1, 1)
+  lifebar.beginFill(0xDE1414, 0.2)
+  lifebar.drawRect(-20, -50, 40, 5)
+  lifebar.endFill()
+  lifebar.lineStyle(0)
+  lifebar.beginFill(0xDE1414)
+  lifebar.drawRect(-20, -50, 40 * (hp / 100), 5)
+  lifebar.endFill()
 
   graphics.position.x = body.position.x
   graphics.position.y = body.position.y

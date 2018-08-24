@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js'
+import { Container } from 'pixi.js'
 import { Bodies, Common } from 'matter-js'
 import Sprites from '../../../sprites'
 
@@ -94,12 +94,6 @@ const create = ({ x, y, width, height }) => {
       // cache as bitmap (perf)
       entity.graphics.cacheAsBitmap = true
     })
-
-  // show collision
-  const graphics = new Graphics()
-  graphics.lineStyle(1, 0x00FF00)
-  graphics.drawRect(0, 0, width, height)
-  entity.graphics.addChild(graphics)
 
   return entity
 }

@@ -6,8 +6,8 @@ const create = ({ player }) => ({
   player,
 })
 
-const draw = (ui) => {
-  const { player, graphics } = ui
+const draw = (entity) => {
+  const { player, graphics } = entity
   const { inputs, timers } = player
   const { bindings } = inputs
 

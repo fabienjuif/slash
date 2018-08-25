@@ -99,12 +99,12 @@ const create = ({ x, y, width, height }) => {
   return entity
 }
 
-const draw = (wall) => {
-  const { x, y, graphics, drew } = wall
+const draw = (entity) => {
+  const { x, y, graphics, drew } = entity
 
   // already drew once ? Then this is enough since wall are statics
   if (drew) return true
-  wall.drew = true
+  entity.drew = true
 
   graphics.position.x = x
   graphics.position.y = y

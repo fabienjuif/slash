@@ -5,8 +5,8 @@ const create = ({ inputs }) => ({
   inputs,
 })
 
-const draw = (ui) => {
-  const { graphics, inputs } = ui
+const draw = (entity) => {
+  const { graphics, inputs } = entity
   const { jump, shield, up, down, left, right } = inputs.keys
 
   graphics.clear()

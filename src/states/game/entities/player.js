@@ -66,8 +66,8 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
   return entity
 }
 
-const update = (player) => {
-  const { body, timers, looking, moving, inputs } = player
+const update = (entity) => {
+  const { body, timers, looking, moving, inputs } = entity
   const { jump, shield, dead } = timers
   const { keys } = inputs
 
@@ -97,19 +97,19 @@ const update = (player) => {
   else Body.setVelocity(body, Vector.mult(moving, 5))
 
   // remove some hp when channeling shield
-  if (Timer.isChanneling(shield)) player.hp -= (Date.now() - shield.since) / 100
+  if (Timer.isChanneling(shield)) entity.hp -= (Date.now() - shield.since) / 100
 
   // check if player is not dead
-  if (player.hp <= 0) {
-    if (player.lastTouchedBy) player.lastTouchedBy.kills += 1
+  if (entity.hp <= 0) {
+    if (entity.lastTouchedBy) entity.lastTouchedBy.kills += 1
     Timer.trigger(dead)
   }
 
   return true
 }
 
-const draw = (player) => {
-  const { timers, animations, inputs, graphics, body, hp } = player
+const draw = (entity) => {
+  const { timers, animations, inputs, graphics, body, hp } = entity
   const { jump, shield, dead, invulnerability } = timers
   const { up, down, left, right } = inputs.keys
 
@@ -148,17 +148,17 @@ const draw = (player) => {
 
   // show invulnerability
   if (Timer.isChanneling(invulnerability)) {
-    player.invulnerabilityEffect += 1
-    if (player.invulnerabilityEffect % 5 === 0) {
+    entity.invulnerabilityEffect += 1
+    if (entity.invulnerabilityEffect % 5 === 0) {
       graphics.alpha = graphics.alpha === 0.5 ? 0.1 : 0.5
     }
   } else {
-    player.invulnerabilityEffect = 0
+    entity.invulnerabilityEffect = 0
     graphics.alpha = 1
   }
 
   // kill number
-  graphics.getChildByName('killedNumber').text = player.kills.toString()
+  graphics.getChildByName('killedNumber').text = entity.kills.toString()
 
   // move graphics
   graphics.position.x = body.position.x

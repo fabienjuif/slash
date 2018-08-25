@@ -112,7 +112,7 @@ const prepare = (state, previous) => {
   }
 
   // AI
-  state.ai = Array.from({ length: previous.iaCount }).map(() => AI.create(state))
+  state.ai = Array.from({ length: previous.aiCount }).map(() => AI.create(state))
   const aiEntities = add(state, state.ai.map(inputs => Entity.create('player', { id: 'ai', inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
   aiEntities.forEach((entity) => {
     entity.inputs.entity = entity
@@ -144,11 +144,9 @@ const update = (state, delta) => {
   // update physics (and its entities)
   Physics.update(physics, delta)
 
-  // TODO: move it to common state
   // draw static entities (TODO: clear entities that are removed)
   state.staticEntities = staticEntities.filter(Entity.draw)
 
-  // TODO: move it to common state
   // draw entities (TODO: clear entities that are removed)
   state.entities = entities.filter(Entity.draw)
 

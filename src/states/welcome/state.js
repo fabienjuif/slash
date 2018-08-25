@@ -23,7 +23,7 @@ const bindings = {
 
 const create = () => ({
   inputs: undefined,
-  iaCount: 2, // TODO: rename aiCount
+  aiCount: 2, // TODO: rename aiCount
   entities: [],
   staticEntities: [],
   skills: {
@@ -55,9 +55,9 @@ const update = (state) => {
   // TODO: move this into UI entity ?
   if (!Skill.isCooldown(skills.ai)) {
     if (keys.more || keys.less) Skill.trigger(skills.ai)
-    if (keys.more) state.iaCount += 1
-    if (keys.less) state.iaCount -= 1
-    if (state.iaCount < 1) state.iaCount = 1
+    if (keys.more) state.aiCount += 1
+    if (keys.less) state.aiCount -= 1
+    if (state.aiCount < 1) state.aiCount = 1
   }
 
   state.staticEntities = staticEntities.filter(Entity.draw)

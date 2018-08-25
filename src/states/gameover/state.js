@@ -39,7 +39,6 @@ const update = (state) => {
   return 'gameover'
 }
 
-// TODO: merge code about this (in states)
 const clear = (state) => {
   Inputs.clear(state.inputs)
   state.entities.forEach(Entity.clear)

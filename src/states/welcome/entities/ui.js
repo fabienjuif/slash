@@ -33,7 +33,7 @@ const draw = (entity) => {
   printText('2. <V> to shield')
   x -= 100
   y += 50
-  printText(`You are against ${state.iaCount} (press +/- to adjust) AI`)
+  printText(`You are against ${state.aiCount} (press +/- to adjust) AI`)
   x += 20
   y += 20
   printText('Try to kill them by slashing through them!')

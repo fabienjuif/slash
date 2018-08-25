@@ -31,11 +31,12 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     .then(() => {
       entity.animations = Sprites.asAnimatedSprites(sprites, ['adventurer-hurt', 'adventurer-attack1', 'adventurer-run', 'adventurer-smrslt', 'adventurer-idle'])
       entity.animations.forEach((animation) => {
+        entity.graphics.addChild(animation)
+
         animation.animationSpeed = 0.2
         animation.scale = { x: 2, y: 2 }
         animation.position.x = -50
         animation.position.y = -45
-        entity.graphics.addChild(animation)
       })
     })
 
@@ -109,7 +110,7 @@ const update = (entity) => {
 }
 
 const draw = (entity) => {
-  const { timers, animations, inputs, graphics, body, hp } = entity
+  const { looking, timers, animations, inputs, graphics, body, hp } = entity
   const { jump, shield, dead, invulnerability } = timers
   const { up, down, left, right } = inputs.keys
 
@@ -133,6 +134,13 @@ const draw = (entity) => {
 
   const animation = animations.get(animationName)
   animation.visible = true
+  if (looking.x < 0) {
+    animation.position.x = 50
+    animation.scale.x = -2
+  } else {
+    animation.position.x = -50
+    animation.scale.x = 2
+  }
 
   // lifebar
   const lifebar = graphics.getChildByName('lifebar')

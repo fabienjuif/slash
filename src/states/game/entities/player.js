@@ -1,14 +1,14 @@
 import { Container, Graphics, Text } from 'pixi.js'
 import { Bodies, Body, Vector, Pair } from 'matter-js'
 import Sprites from '../../../sprites'
-import Skill from '../../../skill'
+import Timer from '../../../timer'
 
 const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
-  const skills = {
-    jump: Skill.create('jump', { cooldown: 3000, last: 100 }),
-    shield: Skill.create('shield', { cooldown: 90, last: 100 }),
-    dead: Skill.create('dead', { cooldown: Infinity, last: 100 }),
-    invulnerability: Skill.create('invulnerability', { cooldown: 0, last: 500 }),
+  const timers = {
+    jump: Timer.create('jump', { cooldown: 3000, last: 100 }),
+    shield: Timer.create('shield', { cooldown: 90, last: 100 }),
+    dead: Timer.create('dead', { cooldown: Infinity, last: 100 }),
+    invulnerability: Timer.create('invulnerability', { cooldown: 0, last: 500 }),
   }
 
   const entity = {
@@ -20,7 +20,7 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     looking: { x: 1, y: 0 },
     moving: { x: 0, y: 0 },
     hp: 100,
-    skills,
+    timers,
     kills: 0,
     invulnerabilityEffect: 0,
   }
@@ -67,15 +67,15 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
 }
 
 const update = (player) => {
-  const { body, skills, looking, moving, inputs } = player
-  const { jump, shield, dead } = skills
+  const { body, timers, looking, moving, inputs } = player
+  const { jump, shield, dead } = timers
   const { keys } = inputs
 
   // if player is dead we remove it from physical engine
-  if (Skill.isCooldown(dead)) return false
+  if (Timer.isCooldown(dead)) return false
 
-  if (keys.jump) Skill.trigger(jump)
-  if (keys.shield) Skill.trigger(shield)
+  if (keys.jump) Timer.trigger(jump)
+  if (keys.shield) Timer.trigger(shield)
 
   let x = 0
   let y = 0
@@ -92,31 +92,31 @@ const update = (player) => {
   looking.x = (y === 0 ? x : x * 0.62)
   looking.y = (x === 0 ? y : y * 0.62)
 
-  // jump skill block the moving one
-  if (Skill.isChanneling(jump)) Body.setVelocity(body, Vector.mult(looking, 15))
+  // jump timer block the moving one
+  if (Timer.isChanneling(jump)) Body.setVelocity(body, Vector.mult(looking, 15))
   else Body.setVelocity(body, Vector.mult(moving, 5))
 
   // remove some hp when channeling shield
-  if (Skill.isChanneling(shield)) player.hp -= (Date.now() - shield.since) / 100
+  if (Timer.isChanneling(shield)) player.hp -= (Date.now() - shield.since) / 100
 
   // check if player is not dead
   if (player.hp <= 0) {
     if (player.lastTouchedBy) player.lastTouchedBy.kills += 1
-    Skill.trigger(dead)
+    Timer.trigger(dead)
   }
 
   return true
 }
 
 const draw = (player) => {
-  const { skills, animations, inputs, graphics, body, hp } = player
-  const { jump, shield, dead, invulnerability } = skills
+  const { timers, animations, inputs, graphics, body, hp } = player
+  const { jump, shield, dead, invulnerability } = timers
   const { up, down, left, right } = inputs.keys
 
   if (!animations) return true
 
   // if player is dead for good (after channeling effect we ask for removal)
-  if (Skill.isCooldown(dead) && !Skill.isChanneling(dead)) {
+  if (Timer.isCooldown(dead) && !Timer.isChanneling(dead)) {
     graphics.visible = false
     return false
   }
@@ -124,12 +124,12 @@ const draw = (player) => {
   animations.forEach((animation) => { animation.visible = false })
 
   let animationName = 'adventurer-idle'
-  if (Skill.isChanneling(dead)) animationName = 'adventurer-hurt'
-  else if (Skill.isChanneling(jump)) animationName = 'adventurer-attack1'
-  else if (Skill.isChanneling(shield)) animationName = 'adventurer-smrslt' // TODO: how to print both shield + jump ?
+  if (Timer.isChanneling(dead)) animationName = 'adventurer-hurt'
+  else if (Timer.isChanneling(jump)) animationName = 'adventurer-attack1'
+  else if (Timer.isChanneling(shield)) animationName = 'adventurer-smrslt' // TODO: how to print both shield + jump ?
   else if (up || down || left || right) animationName = 'adventurer-run'
-  // TODO: if (Skill.isCooldown(jump)) circleSize = 35 // show cooldown
-  // TODO: REMOVE ? if (!Skill.isChanneling(dead) && Skill.isChanneling(shield)) graphics.beginFill(color)
+  // TODO: if (Timer.isCooldown(jump)) circleSize = 35 // show cooldown
+  // TODO: REMOVE ? if (!Timer.isChanneling(dead) && Timer.isChanneling(shield)) graphics.beginFill(color)
 
   const animation = animations.get(animationName)
   animation.visible = true
@@ -147,7 +147,7 @@ const draw = (player) => {
   lifebar.endFill()
 
   // show invulnerability
-  if (Skill.isChanneling(invulnerability)) {
+  if (Timer.isChanneling(invulnerability)) {
     player.invulnerabilityEffect += 1
     if (player.invulnerabilityEffect % 5 === 0) {
       graphics.alpha = graphics.alpha === 0.5 ? 0.1 : 0.5
@@ -175,9 +175,9 @@ const collides = (entity, other, pair) => {
   // - entity is not a slasher
   // - other channeling its shield
   // - other is invulnerable
-  if (!Skill.isChanneling(entity.skills.jump)) return
-  if (Skill.isChanneling(other.skills.shield)) return
-  if (Skill.isChanneling(other.skills.invulnerability)) return
+  if (!Timer.isChanneling(entity.timers.jump)) return
+  if (Timer.isChanneling(other.timers.shield)) return
+  if (Timer.isChanneling(other.timers.invulnerability)) return
 
   // inactive so both bodies can pass through
   Pair.setActive(pair, false)
@@ -187,16 +187,16 @@ const collides = (entity, other, pair) => {
   other.hp -= 50
 
   // other entity becomes invulnerable
-  Skill.trigger(other.skills.invulnerability)
+  Timer.trigger(other.timers.invulnerability)
 
   // register as the player who last touch the other
   other.lastTouchedBy = entity
 
   // someone that sucessfully touch an other player
   // - gets its jump cooldown reset
-  //   > this is not reset to Date.now() because the player certainly can't release the skill in 0ms
+  //   > this is not reset to Date.now() because the player certainly can't release the timer in 0ms
   // - steal some life
-  entity.skills.jump.next = Date.now() + 200
+  entity.timers.jump.next = Date.now() + 200
   entity.hp += 20
   if (entity.hp > 100) entity.hp = 100
 }

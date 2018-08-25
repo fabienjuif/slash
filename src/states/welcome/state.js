@@ -1,6 +1,6 @@
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
-import Skill from '../../skill' // TODO: rename it 'timer' ?
+import Timer from '../../timer'
 import Entity from './entities/entity'
 
 const bindings = {
@@ -23,11 +23,11 @@ const bindings = {
 
 const create = () => ({
   inputs: undefined,
-  aiCount: 2, // TODO: rename aiCount
+  aiCount: 2,
   entities: [],
   staticEntities: [],
-  skills: {
-    ai: Skill.create('ai', { cooldown: 150, last: 0 }),
+  timers: {
+    ai: Timer.create('ai', { cooldown: 150, last: 0 }),
   },
 })
 
@@ -42,7 +42,7 @@ const prepare = (state) => {
 }
 
 const update = (state) => {
-  const { inputs, staticEntities, skills } = state
+  const { inputs, staticEntities, timers } = state
   const { keys, touch } = inputs
 
   state.inputs = Inputs.update(inputs)
@@ -53,8 +53,8 @@ const update = (state) => {
   }
 
   // TODO: move this into UI entity ?
-  if (!Skill.isCooldown(skills.ai)) {
-    if (keys.more || keys.less) Skill.trigger(skills.ai)
+  if (!Timer.isCooldown(timers.ai)) {
+    if (keys.more || keys.less) Timer.trigger(timers.ai)
     if (keys.more) state.aiCount += 1
     if (keys.less) state.aiCount -= 1
     if (state.aiCount < 1) state.aiCount = 1
@@ -65,7 +65,6 @@ const update = (state) => {
   return 'welcome'
 }
 
-// TODO: merge code about this (in states)
 const clear = (state) => {
   Inputs.clear(state.inputs)
   state.entities.forEach(Entity.clear)

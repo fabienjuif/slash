@@ -1,5 +1,5 @@
 import { Text } from 'pixi.js'
-import Skill from '../../../skill'
+import Timer from '../../../timer'
 
 const create = ({ player }) => ({
   graphics: new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }),
@@ -8,15 +8,15 @@ const create = ({ player }) => ({
 
 const draw = (ui) => {
   const { player, graphics } = ui
-  const { inputs, skills } = player
+  const { inputs, timers } = player
   const { bindings } = inputs
 
-  const print = ['jump', 'shield'].map((skillName) => {
-    const skill = skills[skillName]
-    const cooldown = Skill.isCooldown(skill) ? `${skill.next - Date.now()}`.padStart(7, ' ') : 'ready !'
+  const print = ['jump', 'shield'].map((timerName) => {
+    const timer = timers[timerName]
+    const cooldown = Timer.isCooldown(timer) ? `${timer.next - Date.now()}`.padStart(7, ' ') : 'ready !'
 
-    const bindTxt = ` (${String.fromCharCode(bindings[skillName].keyCode)})`
-    return `${skillName}${bindTxt}: ${cooldown}`
+    const bindTxt = ` (${String.fromCharCode(bindings[timerName].keyCode)})`
+    return `${timerName}${bindTxt}: ${cooldown}`
   })
   print.push(`${Math.floor(player.hp)} HP`)
   graphics.text = print.join(' | ')

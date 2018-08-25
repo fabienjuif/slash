@@ -90,12 +90,6 @@ const prepare = (state, previous) => {
   // grass
   state.entities.push(Entity.create('grass', { width: worldSize.x, height: worldSize.y }))
 
-  // player
-  // - inputs
-  // - entity
-  state.inputs = Inputs.create(bindings)
-  state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
-
   // walls
   // - outside the level
   add(state, Entity.create('wall', { x: 0, y: 0, width: worldSize.x, height: WALL_WIDTH }))
@@ -110,6 +104,12 @@ const prepare = (state, previous) => {
       }
     }
   }
+
+  // player
+  // - inputs
+  // - entity
+  state.inputs = Inputs.create(bindings)
+  state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
 
   // AI
   state.ai = Array.from({ length: previous.aiCount }).map(() => AI.create(state))

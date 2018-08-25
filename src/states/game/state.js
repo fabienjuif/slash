@@ -5,63 +5,6 @@ import Inputs from '../../inputs/inputs'
 import Entity from './entities/entity'
 import AI from './ai/classic'
 
-const bindings = {
-  jump: {
-    keyCode: 67, // c
-    zone: {
-      x: window.innerWidth - 150,
-      y: window.innerHeight - 85,
-      width: 80,
-      height: 80,
-    },
-  },
-  shield: {
-    keyCode: 86, // v
-    zone: {
-      x: window.innerWidth - 85,
-      y: window.innerHeight - 140,
-      width: 80,
-      height: 80,
-    },
-  },
-  left: {
-    keyCode: 37, // left arrow
-    zone: {
-      x: 5,
-      y: window.innerHeight - 200,
-      width: 80,
-      height: 195,
-    },
-  },
-  right: {
-    keyCode: 39, // right arrow
-    zone: {
-      x: 125,
-      y: window.innerHeight - 200,
-      width: 80,
-      height: 195,
-    },
-  },
-  up: {
-    keyCode: 38, // top arrow
-    zone: {
-      x: 5,
-      y: window.innerHeight - 200,
-      width: 195,
-      height: 80,
-    },
-  },
-  down: {
-    keyCode: 40, // bottom arrow
-    zone: {
-      x: 5,
-      y: window.innerHeight - 85,
-      width: 195,
-      height: 80,
-    },
-  },
-}
-
 const WALL_WIDTH = 100
 
 const add = (state, entities) => {
@@ -108,7 +51,62 @@ const prepare = (state, previous) => {
   // player
   // - inputs
   // - entity
-  state.inputs = Inputs.create(bindings)
+  state.inputs = Inputs.create({
+    jump: {
+      keyCode: 67, // c
+      zone: {
+        x: window.innerWidth - 150,
+        y: window.innerHeight - 85,
+        width: 80,
+        height: 80,
+      },
+    },
+    shield: {
+      keyCode: 86, // v
+      zone: {
+        x: window.innerWidth - 85,
+        y: window.innerHeight - 140,
+        width: 80,
+        height: 80,
+      },
+    },
+    left: {
+      keyCode: 37, // left arrow
+      zone: {
+        x: 5,
+        y: window.innerHeight - 200,
+        width: 80,
+        height: 195,
+      },
+    },
+    right: {
+      keyCode: 39, // right arrow
+      zone: {
+        x: 125,
+        y: window.innerHeight - 200,
+        width: 80,
+        height: 195,
+      },
+    },
+    up: {
+      keyCode: 38, // top arrow
+      zone: {
+        x: 5,
+        y: window.innerHeight - 200,
+        width: 195,
+        height: 80,
+      },
+    },
+    down: {
+      keyCode: 40, // bottom arrow
+      zone: {
+        x: 5,
+        y: window.innerHeight - 85,
+        width: 195,
+        height: 80,
+      },
+    },
+  })
   state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
 
   // AI

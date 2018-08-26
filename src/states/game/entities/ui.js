@@ -1,7 +1,37 @@
-import { Container, Graphics } from 'pixi.js'
+import { Container, Graphics, Text } from 'pixi.js'
+
+const getTimerFromDiff = (diff) => {
+  let remaining = diff
+
+  const minutes = Math.floor(remaining / (60 * 1000))
+  remaining -= (minutes * 60 * 1000)
+
+  const seconds = Math.floor(remaining / 1000)
+  remaining -= (seconds * 1000)
+
+  const milliseconds = Math.floor(remaining / 10)
+  remaining -= (milliseconds * 10)
+
+  const pad = number => `${number}`.padStart(2, '0')
+
+  return `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`
+}
 
 const create = ({ player }) => {
   const graphics = new Container()
+
+  const timer = graphics.addChild(new Container())
+  timer.name = 'timer'
+  const timerBackground = timer.addChild(new Graphics())
+  timerBackground.beginFill(0, 0.2)
+  timerBackground.drawRect(0, 0, 120, 30)
+  timerBackground.endFill()
+  timer.position.x = window.innerWidth - 130
+  timer.position.y = 10
+  const timerText = timer.addChild(new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))
+  timerText.name = 'text'
+  timerText.position.x = 10
+  timerText.position.y = 5
 
   const lifebar = graphics.addChild(new Graphics())
   lifebar.name = 'lifebar'
@@ -15,11 +45,16 @@ const create = ({ player }) => {
   return {
     graphics,
     player,
+    start: Date.now(),
   }
 }
 const draw = (entity) => {
-  const { graphics, player } = entity
+  const { graphics, player, start } = entity
   const { hp, timers } = player
+
+  // timer
+  const timer = graphics.getChildByName('timer').getChildByName('text')
+  timer.text = getTimerFromDiff(Date.now() - start)
 
   // lifebar
   const lifebar = graphics.getChildByName('lifebar')

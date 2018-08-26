@@ -6,7 +6,7 @@ import Welcome from './welcome/state'
 
 const create = (id, renderer, options) => {
   const fps = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  fps.position.y = 30
+  fps.position.y = 60
   fps.position.x = window.innerWidth - 50
 
   let state

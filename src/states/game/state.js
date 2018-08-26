@@ -118,7 +118,7 @@ const prepare = (state, previous) => {
 
   // UI
   if (isTouched) state.staticEntities.push(Entity.create('touchUI', { inputs: state.inputs }))
-  state.staticEntities.push(Entity.create('skillsCooldown', { player: state.player }))
+  state.staticEntities.push(Entity.create('ui', { player: state.player }))
 
   // add entities to renderer
   const { player, renderer, staticEntities, entities } = state

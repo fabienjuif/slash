@@ -70,8 +70,8 @@ const draw = (entity) => {
 
   // jump
   const half = ((window.innerWidth - 600) / 2) - 3
-  const percent = timer => Math.min(
-    (1 - ((timer.next - Date.now()) / timer.cooldown)),
+  const percent = ({ next, cooldown }) => Math.min(
+    (1 - ((next - Date.now()) / cooldown)),
     1,
   )
   const jump = graphics.getChildByName('jump')

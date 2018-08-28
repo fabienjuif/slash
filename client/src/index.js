@@ -1,16 +1,8 @@
 import Renderer from './renderer/renderer'
 import State from './states/state'
-import Server from './server'
 
 const TEST_PERF = false
 const FAST = false || TEST_PERF
-
-// connect and disconnect
-const server = Server.create()
-setTimeout(
-  () => Server.clear(server),
-  3000,
-)
 
 const worldSize = {
   x: 3200,
@@ -30,6 +22,7 @@ const startGame = () => {
       game: State.create('game', renderer, { worldSize }),
       gameover: State.create('gameover', renderer),
       welcome: State.create('welcome', renderer),
+      lobby: State.create('lobby', renderer),
     }
 
     let previousStateId

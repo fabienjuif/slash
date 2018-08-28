@@ -4,7 +4,9 @@ const create = () => {
   const server = {
     socket: io.connect(),
     token: undefined,
-    players: [],
+    game: undefined,
+    players: [], // player without the local one
+    playerByName: new Map(),
   }
 
   server.socket.on('token>get', () => {
@@ -17,14 +19,45 @@ const create = () => {
     server.token = token
   })
 
+  server.socket.on('game>set', (data) => {
+    server.game = data
+
+    server.players = server.game.players.filter(player => player.name !== server.token)
+
+    server.game.players.forEach((player) => {
+      server.playerByName.set(player.name, player)
+    })
+  })
+
+  server.socket.on('player>add', (data) => {
+    server.game.players.push(data)
+    server.playerByName.set(data.name, data)
+  })
+
+  server.socket.on('game>started', () => {
+    server.game.started = true
+  })
+
+  server.socket.on('key>set', (data) => {
+    const { name, code, after } = data
+    // TODO: make sure all references are updated?...
+    server.playerByName.get(name).keys[code] = after
+  })
+
   return server
+}
+
+const emit = (server, type, payload) => {
+  server.socket.emit(type, payload)
 }
 
 const clear = (server) => {
   server.socket.disconnect()
+  window.localStorage.removeItem('slash_token')
 }
 
 export default {
   create,
+  emit,
   clear,
 }

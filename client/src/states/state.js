@@ -2,6 +2,7 @@ import { Text } from 'pixi.js'
 import Renderer from '../renderer/renderer'
 import Game from './game/state'
 import Gameover from './gameover/state'
+import Lobby from './lobby/state'
 import Welcome from './welcome/state'
 
 const create = (id, renderer, options) => {
@@ -13,6 +14,7 @@ const create = (id, renderer, options) => {
   if (id === 'game') state = Game.create(options)
   if (id === 'gameover') state = Gameover.create(options)
   if (id === 'welcome') state = Welcome.create(options)
+  if (id === 'lobby') state = Lobby.create(options)
 
   return Object.assign(
     state,
@@ -40,6 +42,7 @@ const update = (state, delta) => {
   if (id === 'game') newStateId = Game.update(state, delta)
   else if (id === 'gameover') newStateId = Gameover.update(state, delta)
   else if (id === 'welcome') newStateId = Welcome.update(state, delta)
+  else if (id === 'lobby') newStateId = Lobby.update(state, delta)
 
   // draw
   Renderer.update(renderer)
@@ -50,8 +53,12 @@ const update = (state, delta) => {
 const prepare = (state, previous) => {
   const { id, renderer, fps } = state
 
-  // get if touched
-  if (previous) state.isTouched = previous.isTouched
+  // cross state (TODO: inject this with HoF)
+  if (previous) {
+    state.isTouched = previous.isTouched
+    state.server = previous.server
+    state.aiCount = previous.aiCount
+  }
 
   // clear renderer
   Renderer.clear(renderer)
@@ -60,6 +67,7 @@ const prepare = (state, previous) => {
   if (id === 'game') Game.prepare(state, previous)
   else if (id === 'gameover') Gameover.prepare(state, previous)
   else if (id === 'welcome') Welcome.prepare(state, previous)
+  else if (id === 'lobby') Lobby.prepare(state, previous)
 
   // add FPS stage
   Renderer.addToStage(renderer, { graphics: fps })
@@ -71,6 +79,7 @@ const clear = (state) => {
   if (id === 'game') Game.clear(state)
   else if (id === 'gameover') Gameover.clear(state)
   else if (id === 'welcome') Welcome.clear(state)
+  else if (id === 'lobby') Lobby.clear(state)
 }
 
 export default {

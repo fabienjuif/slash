@@ -1,5 +1,11 @@
 node_modules
+**/node_modules
+
 .cache
+**/.cache
+
 dist
+**/dist
+
 .DS_Store
 **/.DS_Store

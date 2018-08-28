@@ -24,7 +24,7 @@ module.exports = (printDebug) => {
     }
   })
 
-  const games = [] // TODO: care memory leak
+  let games = []
   let waitingGame = null
   const clientsBySocketId = new Map()
   const clientsByToken = new Map()
@@ -68,6 +68,7 @@ module.exports = (printDebug) => {
         // start the game if all players are here
         if (waitingGame.players.length === 2) {
           waitingGame.started = true
+          waitingGame.start = Date.now()
           games.push(waitingGame)
           waitingGame = undefined
 
@@ -75,6 +76,17 @@ module.exports = (printDebug) => {
             if (player.client.socket) player.client.socket.emit('game>started', { id: client.game.id })
           })
 
+          // try to free some memory
+          if (games.length > 5) {
+            games = games.filter((game) => {
+              if ((game.start + 1200000 /* 20 min */) < Date.now()) {
+                console.log(`💀 | timeout on game ${game.id}`)
+                return false
+              }
+
+              return true
+            })
+          }
           console.log(`🚀 | ${games.length} games`)
         }
       } else {

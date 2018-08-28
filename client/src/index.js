@@ -1,16 +1,16 @@
-import io from 'socket.io-client'
 import Renderer from './renderer/renderer'
 import State from './states/state'
-
-const socket = io.connect()
-socket.on('news', (data) => {
-  console.log(data)
-  socket.emit('my other event', { my: 'data' })
-})
-
+import Server from './server'
 
 const TEST_PERF = false
 const FAST = false || TEST_PERF
+
+// connect and disconnect
+const server = Server.create()
+setTimeout(
+  () => Server.clear(server),
+  3000,
+)
 
 const worldSize = {
   x: 3200,

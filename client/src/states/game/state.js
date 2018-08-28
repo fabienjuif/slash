@@ -2,6 +2,7 @@ import Physics from './physics'
 import { random, chance } from '../../utils'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
+import Server from '../../server'
 import Entity from './entities/entity'
 import AI from './ai/classic'
 
@@ -25,7 +26,7 @@ const create = ({ worldSize }) => ({
 })
 
 const prepare = (state, previous) => {
-  const { worldSize, isTouched } = state
+  const { worldSize, isTouched, server } = state
 
   // create physic engine
   state.physics = Physics.create()
@@ -107,7 +108,11 @@ const prepare = (state, previous) => {
       },
     },
   })
+  Inputs.addListener(state.inputs, payload => Server.emit(server, 'key>set', payload))
   state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
+
+  // Remote players
+  add(state, state.server.players.map(player => Entity.create('player', { id: player.name, inputs: player, x: worldSize.x / 2, y: worldSize.y / 2 })))
 
   // AI
   state.ai = Array.from({ length: previous.aiCount }).map(() => AI.create(state))
@@ -163,6 +168,7 @@ const clear = (state) => {
   state.staticEntities.forEach(Entity.clear)
   state.entities = []
   state.staticEntities = []
+  Server.clear(state.server)
 }
 
 export default {

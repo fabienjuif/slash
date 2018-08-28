@@ -16,16 +16,27 @@ const create = (bindings) => {
     codes,
     keys,
     bindings,
+    listeners: [],
     keyboard: Keyboard.create(bindings),
     touch: Touch.create(bindings),
   }
 }
 
+const addListener = (inputs, listener) => {
+  inputs.listeners.push(listener)
+}
+
 const update = (inputs) => {
-  const { codes, keyboard, touch } = inputs
+  const { codes, keyboard, touch, listeners } = inputs
 
   codes.forEach((code) => {
-    inputs.keys[code] = keyboard.keys[code] || touch.keys[code]
+    const before = inputs.keys[code]
+    const after = keyboard.keys[code] || touch.keys[code]
+    inputs.keys[code] = after
+
+    if (before !== after) {
+      listeners.forEach(listener => listener({ code, before, after }))
+    }
   })
 
   return inputs
@@ -40,6 +51,7 @@ const clear = (inputs) => {
 
 export default {
   create,
+  addListener,
   update,
   clear,
 }

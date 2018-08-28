@@ -49,7 +49,7 @@ const update = (state) => {
 
   if (keys.enter) {
     state.isTouched = !!touch.keys.enter
-    return 'game'
+    return 'lobby'
   }
 
   // TODO: move this into UI entity ?

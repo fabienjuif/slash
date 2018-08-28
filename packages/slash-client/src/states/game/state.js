@@ -33,6 +33,9 @@ const prepare = (state, previous) => {
   // grass
   state.entities.push(Entity.create('grass', { width: worldSize.x, height: worldSize.y }))
 
+  // walls
+  add(state, ((server && server.game.walls) || getWalls(worldSize)).map(wall => Entity.create('wall', wall)))
+
   // player
   // - inputs
   // - entity
@@ -96,17 +99,12 @@ const prepare = (state, previous) => {
 
   // internet version
   if (server) {
-    add(state, server.game.walls.map(wall => Entity.create('wall', wall)))
-
     // bin player (local) input to server
     Inputs.addListener(state.inputs, payload => Server.emit(server, 'key>set', payload))
 
     // add other players
     add(state, server.players.map(player => Entity.create('player', { id: player.name, inputs: player, x: worldSize.x / 2, y: worldSize.y / 2 })))
   } else {
-    // walls
-    add(state, getWalls(worldSize).map(wall => Entity.create('wall', wall)))
-
     // AI version
     state.ai = Array.from({ length: previous.aiCount }).map(() => AI.create(state))
     const aiEntities = add(state, state.ai.map(inputs => Entity.create('player', { id: 'ai', inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))

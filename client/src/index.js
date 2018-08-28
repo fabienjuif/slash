@@ -1,5 +1,13 @@
+import io from 'socket.io-client'
 import Renderer from './renderer/renderer'
 import State from './states/state'
+
+const socket = io.connect()
+socket.on('news', (data) => {
+  console.log(data)
+  socket.emit('my other event', { my: 'data' })
+})
+
 
 const TEST_PERF = false
 const FAST = false || TEST_PERF

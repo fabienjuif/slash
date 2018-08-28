@@ -1,0 +1,12 @@
+{
+  "name": "slash-generators",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "src/index.js",
+  "author": "Fabien JUIF <fabien.juif@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "slash-utils": "^1.0.0"
+  }
+}

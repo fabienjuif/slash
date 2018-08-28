@@ -1,6 +1,6 @@
 import { Container } from 'pixi.js'
 import { Bodies } from 'matter-js'
-import { choose } from '../../../utils'
+import { choose } from 'slash-utils'
 import Sprites from '../../../sprites'
 
 const create = ({ x, y, width, height }) => {

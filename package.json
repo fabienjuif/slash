@@ -16,7 +16,7 @@
     "start": "node ./server/src/index.js",
     "dev": "run-p parcel:dist:start server:dev",
     "install": "run-s parcel:dist:build",
-    "lint": "eslint {client,server}/src"
+    "lint": "eslint client/src server/src"
   },
   "author": "Fabien JUIF <fabien.juif@gmail.com>",
   "license": "MIT",

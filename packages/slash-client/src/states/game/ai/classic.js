@@ -1,4 +1,4 @@
-import { chance, choose } from '../../../utils'
+import { chance, choose } from 'slash-utils'
 
 const create = game => ({
   id: 'ai-classic',

@@ -1,6 +1,6 @@
 import { Container } from 'pixi.js'
+import { choose } from 'slash-utils'
 import Sprites from '../../../sprites'
-import { choose } from '../../../utils'
 
 const create = ({ width, height }) => {
   const entity = {

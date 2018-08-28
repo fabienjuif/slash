@@ -1,12 +1,11 @@
+import { random } from 'slash-utils'
+import { getWalls } from 'slash-generators'
 import Physics from './physics'
-import { random, chance } from '../../utils'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
 import Server from '../../server'
 import Entity from './entities/entity'
 import AI from './ai/classic'
-
-const WALL_WIDTH = 100
 
 const add = (state, entities) => {
   const { physics } = state
@@ -35,19 +34,8 @@ const prepare = (state, previous) => {
   state.entities.push(Entity.create('grass', { width: worldSize.x, height: worldSize.y }))
 
   // walls
-  // - outside the level
-  add(state, Entity.create('wall', { x: 0, y: 0, width: worldSize.x, height: WALL_WIDTH }))
-  add(state, Entity.create('wall', { x: 0, y: 0, width: WALL_WIDTH, height: worldSize.y }))
-  add(state, Entity.create('wall', { x: (worldSize.x - WALL_WIDTH), y: 0, width: WALL_WIDTH, height: worldSize.y }))
-  add(state, Entity.create('wall', { x: 0, y: (worldSize.y - WALL_WIDTH), width: worldSize.x, height: WALL_WIDTH }))
-  // - inside the level
-  for (let i = 0; i < worldSize.x / WALL_WIDTH; i += 1) {
-    for (let j = 0; j < worldSize.y / WALL_WIDTH; j += 1) {
-      if (chance(10)) {
-        add(state, Entity.create('wall', { x: (i * WALL_WIDTH), y: (j * WALL_WIDTH), width: WALL_WIDTH, height: WALL_WIDTH }))
-      }
-    }
-  }
+  const walls = (server.game && server.game.walls) || getWalls(worldSize)
+  add(state, walls.map(wall => Entity.create('wall', wall)))
 
   // player
   // - inputs

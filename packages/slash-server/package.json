@@ -1,0 +1,22 @@
+{
+  "name": "slash-server",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development node -r esm .",
+    "start": "node -r esm ."
+  },
+  "author": "Fabien JUIF <fabien.juif@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^2.0.4",
+    "esm": "^3.0.80",
+    "koa": "^2.5.2",
+    "koa-static": "^5.0.0",
+    "slash-generators": "^1.0.0",
+    "socket.io": "^2.1.1",
+    "uuid": "^3.3.2"
+  }
+}

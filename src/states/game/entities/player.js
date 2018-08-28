@@ -67,7 +67,7 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
   return entity
 }
 
-const update = (entity) => {
+const update = (entity, delta) => {
   const { body, timers, looking, moving, inputs } = entity
   const { jump, shield, dead } = timers
   const { keys } = inputs
@@ -93,9 +93,14 @@ const update = (entity) => {
   looking.x = (y === 0 ? x : x * 0.62)
   looking.y = (x === 0 ? y : y * 0.62)
 
-  // jump timer block the moving one
-  if (Timer.isChanneling(jump)) Body.setVelocity(body, Vector.mult(looking, 15))
-  else Body.setVelocity(body, Vector.mult(moving, 5))
+  // move using `setPosition` and scale it with time since `setVelocity` doesn't scale with time (yet ?)
+  let velocity = 0.5
+  let where = moving
+  if (Timer.isChanneling(jump)) {
+    velocity = 1.5
+    where = looking
+  }
+  Body.setPosition(body, Vector.add(body.position, Vector.mult(where, velocity * delta)))
 
   // remove some hp when channeling shield
   if (Timer.isChanneling(shield)) entity.hp -= (Date.now() - shield.since) / 100
@@ -182,13 +187,15 @@ const collides = (entity, other, pair) => {
   // does nothing if
   // - entity is not a slasher
   // - other channeling its shield
-  // - other is invulnerable
+
   if (!Timer.isChanneling(entity.timers.jump)) return
   if (Timer.isChanneling(other.timers.shield)) return
-  if (Timer.isChanneling(other.timers.invulnerability)) return
 
   // inactive so both bodies can pass through
   Pair.setActive(pair, false)
+
+  // invulnerability can pass through, but we don't do more
+  if (Timer.isChanneling(other.timers.invulnerability)) return
 
   // other entity loose hp
   // FIXME: don't mutate object

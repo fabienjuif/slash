@@ -9,11 +9,13 @@ const create = () => {
   const physics = {
     engine,
     world: engine.world,
-    perLoop: 2,
+    fakedFrequence: (1000 / 60), // this is what we inject into physical engine (matter)
+    realFrequence: (1000 / 120), // but in real life we target this frequence, here it means we run twice the engine per frame
+    tickToCatchUp: 0, // number of milliseconds to catch up in cases where delta / frequence is not a round number
   }
 
   // register collisions
-  Events.on(engine, 'collisionStart', (event) => {
+  Events.on(engine, 'collisionActive', (event) => {
     const { pairs } = event
 
     for (let i = 0; i < pairs.length; i += 1) {
@@ -32,26 +34,32 @@ const add = (physics, entities) => {
 }
 
 const update = (physics, delta) => {
-  const { perLoop, engine, world } = physics
+  const { engine, world, realFrequence, fakedFrequence } = physics
   const { bodies } = world
-
-  // entities
-  // - remove them is not alive anymore
-  bodies.forEach((body) => {
-    const { entity } = body
-
-    Body.setAngle(body, 0) // FIXME: look at friction, etc on bodies to avoid them to turn instead of doing this
-
-    if (!Entity.update(entity)) World.remove(engine.world, body)
-  })
 
   // engine
   // - run the engine several times, so we have the feeling the game is fast
   // - also, this avoid collision detecting issue since CCD is not implemented yet in matter-js
-  let lastLoop = Date.now()
-  for (let i = 0; i < perLoop; i += 1) {
-    Engine.update(engine, i === 0 ? delta : (Date.now() - lastLoop))
-    lastLoop = Date.now()
+  const ticks = (delta / realFrequence)
+  let ticksInt = Math.floor(ticks)
+  physics.tickToCatchUp += (ticks - ticksInt)
+  if (physics.tickToCatchUp >= 1) {
+    physics.tickToCatchUp -= 1
+    ticksInt += 1
+  }
+  for (let i = 0; i < ticksInt; i += 1) {
+    // entities
+    // - remove them is not alive anymore
+    bodies.forEach((body) => {
+      const { entity } = body
+
+      Body.setAngle(body, 0) // FIXME: look at friction, etc on bodies to avoid them to turn instead of doing this
+
+      if (!Entity.update(entity, realFrequence)) World.remove(engine.world, body)
+    })
+
+    // matter-js
+    Engine.update(engine, fakedFrequence) // fixed frequence
   }
 }
 

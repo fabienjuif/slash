@@ -24,6 +24,7 @@ const startGame = () => {
       welcome: State.create('welcome', renderer),
       lobby: State.create('lobby', renderer),
     }
+    window.slash = { states }
 
     let previousStateId
     let stateId = 'welcome'
@@ -49,6 +50,7 @@ const startGame = () => {
       // prepare next state
       const state = states[stateId]
       if (previousStateId !== stateId) {
+        window.slash.stateId = stateId
         const previous = states[previousStateId]
 
         State.prepare(state, previous)

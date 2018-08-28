@@ -57,24 +57,30 @@ module.exports = (printDebug) => {
         if (!waitingGame) waitingGame = { id: uuid(), players: [], walls: getWalls({ x: 3200, y: 2400 }) }
         client.game = waitingGame
         client.player = { name: client.token, client, keys: {} }
-        socket.emit('game>set', { ...waitingGame, players: client.game.players.map(player => Object.assign({}, player, { client: undefined })) })
+        client.socket.emit('game>set', { ...waitingGame, players: client.game.players.map(player => Object.assign({}, player, { client: undefined })) })
 
         // tells everybody that new player is here
         client.game.players.push(client.player)
         client.game.players.forEach((player) => {
-          player.client.socket.emit('player>add', Object.assign({}, client.player, { client: undefined }))
+          if (player.client.socket) player.client.socket.emit('player>add', Object.assign({}, client.player, { client: undefined }))
         })
 
         // start the game if all players are here
         if (waitingGame.players.length === 2) {
           waitingGame.started = true
           games.push(waitingGame)
-          const { id } = waitingGame
-          client.game.players.forEach((player) => {
-            player.client.socket.emit('game>started', { id })
-          })
           waitingGame = undefined
+
+          client.game.players.forEach((player) => {
+            if (player.client.socket) player.client.socket.emit('game>started', { id: client.game.id })
+          })
+
+          console.log(`🚀 | ${games.length} games`)
         }
+      } else {
+        console.log(`🤗 | ${client.token} comes back to ${client.game.id} game`)
+        client.socket.emit('game>set', { ...client.game, players: client.game.players.map(player => Object.assign({}, player, { client: undefined })) })
+        client.socket.emit('game>started', { id: client.game.id })
       }
     })
 
@@ -89,7 +95,7 @@ module.exports = (printDebug) => {
       client.game.players.forEach((player) => {
         if (player.client.token === client.token) return
 
-        player.client.socket.emit('key>set', { name, code, after })
+        if (player.client.socket) player.client.socket.emit('key>set', { name, code, after })
       })
     })
 

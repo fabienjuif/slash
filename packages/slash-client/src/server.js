@@ -32,6 +32,7 @@ const create = () => {
   server.socket.on('player>add', (data) => {
     server.game.players.push(data)
     server.playerByName.set(data.name, data)
+    if (data.name !== server.token) server.players.push(data)
   })
 
   server.socket.on('game>started', () => {

@@ -13,6 +13,9 @@ const bindings = {
       height: 25,
     },
   },
+  online: {
+    key: 'o',
+  },
   more: {
     key: '+',
   },
@@ -47,9 +50,11 @@ const update = (state) => {
 
   state.inputs = Inputs.update(inputs)
 
+  if (keys.online) return 'lobby'
   if (keys.enter) {
+    state.server = undefined
     state.isTouched = !!touch.keys.enter
-    return 'lobby'
+    return 'game'
   }
 
   // TODO: move this into UI entity ?

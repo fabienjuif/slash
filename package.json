@@ -15,6 +15,10 @@
   "author": "Fabien JUIF <fabien.juif@gmail.com>",
   "license": "MIT",
   "dependencies": {},
+  "engines": {
+    "node": ">=10.8.0",
+    "npm": ">=6.2.0"
+  },
   "devDependencies": {
     "eslint": "^5.4.0",
     "eslint-config-airbnb-base": "^13.1.0",

@@ -71,7 +71,6 @@ const asAnimatedSprites = (sprites, names) => {
     const animatedSprite = new extras.AnimatedSprite(animations.get(name))
     animatedSprites.set(name, animatedSprite)
 
-    animatedSprite.play() // this is faster to run animations and never stop them
     animatedSprite.visible = false
   })
 

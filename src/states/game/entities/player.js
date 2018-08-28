@@ -23,6 +23,8 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     timers,
     kills: 0,
     invulnerabilityEffect: 0,
+    animations: new Map(),
+    lastAnimationName: 'adventurer-idle',
   }
 
   const sprites = Sprites.create()
@@ -30,13 +32,25 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
     .all(Sprites.load(sprites, '/textures.json', true))
     .then(() => {
       entity.animations = Sprites.asAnimatedSprites(sprites, ['adventurer-hurt', 'adventurer-attack1', 'adventurer-run', 'adventurer-smrslt', 'adventurer-idle'])
-      entity.animations.forEach((animation) => {
+      entity.animations.forEach((animation, name) => {
         entity.graphics.addChild(animation)
 
+        // default values
         animation.animationSpeed = 0.2
         animation.scale = { x: 2, y: 2 }
         animation.position.x = -50
         animation.position.y = -45
+
+        // override some values
+        if (name === 'adventurer-attack1') {
+          animation.animationSpeed = 1
+        }
+
+        // start the first animation
+        if (entity.lastAnimationName === name) {
+          animation.visible = true
+          animation.gotoAndPlay(0)
+        }
       })
     })
 
@@ -115,19 +129,18 @@ const update = (entity, delta) => {
 }
 
 const draw = (entity) => {
-  const { looking, timers, animations, inputs, graphics, body, hp } = entity
+  const { looking, timers, animations, inputs, graphics, body, hp, lastAnimationName } = entity
   const { jump, shield, dead, invulnerability } = timers
   const { up, down, left, right } = inputs.keys
 
-  if (!animations) return true
+  // the game is not ready
+  if (animations.size === 0) return true
 
   // if player is dead for good (after channeling effect we ask for removal)
   if (Timer.isCooldown(dead) && !Timer.isChanneling(dead)) {
     graphics.visible = false
     return false
   }
-
-  animations.forEach((animation) => { animation.visible = false })
 
   let animationName = 'adventurer-idle'
   if (Timer.isChanneling(dead)) animationName = 'adventurer-hurt'
@@ -138,7 +151,18 @@ const draw = (entity) => {
   // TODO: REMOVE ? if (!Timer.isChanneling(dead) && Timer.isChanneling(shield)) graphics.beginFill(color)
 
   const animation = animations.get(animationName)
-  animation.visible = true
+  const lastAnimation = animations.get(lastAnimationName)
+
+  // when we change animation -> start the new one
+  if (animationName !== lastAnimationName) {
+    entity.lastAnimationName = animationName
+    lastAnimation.visible = false
+
+    animation.gotoAndPlay(0)
+    animation.visible = true
+  }
+
+  // scale to the looking position
   if (looking.x < 0) {
     animation.position.x = 50
     animation.scale.x = -2

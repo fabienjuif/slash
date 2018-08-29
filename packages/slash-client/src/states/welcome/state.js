@@ -16,7 +16,7 @@ const bindings = {
   online: {
     key: 'o',
     zone: {
-      x: window.innerWidth - 10,
+      x: window.innerWidth - 210,
       y: 10,
       width: 200,
       height: 200,

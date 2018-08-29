@@ -40,6 +40,8 @@ const create = (bindings) => {
         if (identifiers[code] === undefined || (identifiers[code] === identifier)) {
           const { zone } = bindings[code]
 
+          if (!zone) return
+
           keys[code] = (
             clientX >= zone.x &&
             clientX <= zone.x + zone.width &&

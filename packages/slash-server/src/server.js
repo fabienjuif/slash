@@ -107,6 +107,16 @@ module.exports = (printDebug) => {
           players: client.game.players.map(p => ({ ...p, client: undefined })),
         },
       )
+
+      // gameover - we clear the game from the ram
+      if (client.game.players.filter(({ hp }) => hp > 0).length < 2) {
+        setTimeout(
+          () => {
+            games = games.filter(game => game !== client.game)
+          },
+          1000,
+        )
+      }
     })
 
     socket.on('disconnect', () => {

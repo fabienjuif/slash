@@ -101,9 +101,6 @@ const prepare = (state, previous) => {
   if (server) {
     state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, position: server.player.position }))
 
-    // bin player (local) input to server
-    Inputs.addListener(state.inputs, payload => Server.emit(server, 'key>set', payload))
-
     // add other players
     add(state, server.players.map(player => Entity.create('player', { id: player.name, inputs: player, position: player.position })))
   } else {
@@ -111,7 +108,15 @@ const prepare = (state, previous) => {
 
     // AI version
     state.ai = Array.from({ length: previous.aiCount }).map(() => AI.create(state))
-    const aiEntities = add(state, state.ai.map(inputs => Entity.create('player', { id: 'ai', inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
+    const aiEntities = add(state, state.ai.map(inputs => Entity.create(
+      'player',
+      {
+        id: 'ai',
+        inputs,
+        position: { x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100) },
+        color: 0xfffff00,
+      },
+    )))
     aiEntities.forEach((entity) => {
       entity.inputs.entity = entity
     })
@@ -137,24 +142,33 @@ const update = (state, delta) => {
   // update player inputs
   state.inputs = Inputs.update(state.inputs)
 
+  // update server
+  if (server) {
+    Server.update(server, player)
+    if (server.synced) { // TODO: don't mutate bodies here
+      server.players.forEach(({ name, position, hp, keys }) => {
+        const entity = entities.find(e => e.id === name)
+        if (!entity) return
+
+        Body.setPosition(entity.body, position)
+        entity.hp = hp
+        entity.inputs.keys = keys
+      })
+
+      if (
+        player.hp <= 0 ||
+        entities.filter(entity => entity.type === 'player').length < 2
+      ) return 'gameover'
+
+      server.synced = false // TODO: don't mutate here
+    }
+  }
+
   // update ai
   ai.forEach(AI.update)
 
   // update physics (and its entities)
   Physics.update(physics, delta)
-
-  // update server
-  if (server) {
-    Server.update(server, state.player)
-    if (server.synced) { // TODO: don't mutate bodies here
-      server.players.forEach(({ name, position, hp }) => {
-        const entity = entities.find(e => e.id === name)
-        Body.setPosition(entity.body, position)
-        entity.hp = hp
-      })
-      server.synced = false // TODO: don't mutate here
-    }
-  }
 
   // draw static entities (TODO: clear entities that are removed)
   state.staticEntities = staticEntities.filter(Entity.draw)
@@ -164,8 +178,10 @@ const update = (state, delta) => {
 
   // is it gameover ?
   if (
-    player.hp <= 0 ||
-    entities.filter(entity => entity.type === 'player').length < 2
+    !server && (
+      player.hp <= 0 ||
+      entities.filter(entity => entity.type === 'player').length < 2
+    )
   ) return 'gameover'
 
   return 'game'

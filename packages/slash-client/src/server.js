@@ -42,11 +42,6 @@ const create = () => {
     server.game.started = true
   })
 
-  server.socket.on('key>set', (data) => {
-    const { name, code, after } = data
-    server.playerByName.get(name).keys[code] = after
-  })
-
   server.socket.on('game>sync', (game) => {
     server.synced = false
 
@@ -65,8 +60,14 @@ const create = () => {
 }
 
 const update = (server, entity) => {
-  // TODO: sync keys here instead of `key>set`
-  server.socket.emit('sync>player', { position: entity.body.position, hp: entity.hp })
+  server.socket.emit(
+    'sync>player',
+    {
+      position: entity.body.position,
+      hp: entity.hp,
+      keys: entity.inputs.keys,
+    },
+  )
 }
 
 const emit = (server, type, payload) => {

@@ -98,25 +98,15 @@ module.exports = (printDebug) => {
       }
     })
 
-    socket.on('key>set', (key) => {
-      const { code, after } = key
-
-      // update locally
-      client.player.keys[code] = after
-
-      // tells everyone
-      const { name } = client.player
-      client.game.players.forEach((player) => {
-        if (player.client.token === client.token) return
-
-        if (player.client.socket) player.client.socket.emit('key>set', { name, code, after })
-      })
-    })
-
-    socket.on('sync>player', ({ position, hp }) => {
-      client.player.position = position
-      client.player.hp = hp
-      client.socket.emit('game>sync', { ...client.game, players: client.game.players.map(player => Object.assign({}, player, { client: undefined })) })
+    socket.on('sync>player', (player) => {
+      Object.assign(client.player, player)
+      client.socket.emit(
+        'game>sync',
+        {
+          ...client.game,
+          players: client.game.players.map(p => ({ ...p, client: undefined })),
+        },
+      )
     })
 
     socket.on('disconnect', () => {

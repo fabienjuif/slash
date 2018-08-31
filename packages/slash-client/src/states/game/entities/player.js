@@ -3,7 +3,7 @@ import { Bodies, Body, Vector, Pair } from 'matter-js'
 import Sprites from '../../../sprites'
 import Timer from '../../../timer'
 
-const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
+const create = ({ id, position, inputs, color = 0xff00ff }) => {
   const timers = {
     jump: Timer.create('jump', { cooldown: 3000, last: 100 }),
     shield: Timer.create('shield', { cooldown: 90, last: 100 }),
@@ -13,7 +13,7 @@ const create = ({ id, x, y, inputs, color = 0xff00ff }) => {
 
   const entity = {
     graphics: new Container(),
-    body: Bodies.circle(x, y, 25),
+    body: Bodies.circle(position.x, position.y, 25),
     inputs,
     id,
     color,

@@ -56,8 +56,7 @@ module.exports = (printDebug) => {
       if (isNewClient) { // TODO: handle reconnection
         if (!waitingGame) waitingGame = { id: uuid(), players: [], walls: getWalls({ x: 3200, y: 2400 }) }
         client.game = waitingGame
-        client.player = { name: client.token, client, keys: {} }
-        client.socket.emit('game>set', { ...waitingGame, players: client.game.players.map(player => Object.assign({}, player, { client: undefined })) })
+        client.player = { name: client.token, client, keys: {}, hp: 100, position: { x: 200 + (client.game.players.length * 600), y: 200 + (client.game.players.length * 600) } }
 
         // tells everybody that new player is here
         client.game.players.push(client.player)
@@ -70,13 +69,16 @@ module.exports = (printDebug) => {
           waitingGame.started = true
           waitingGame.start = Date.now()
           games.push(waitingGame)
-          waitingGame = undefined
 
           client.game.players.forEach((player) => {
-            if (player.client.socket) player.client.socket.emit('game>started', { id: client.game.id })
+            if (player.client.socket) {
+              player.client.socket.emit('game>set', { ...waitingGame, players: waitingGame.players.map(p => ({ ...p, client: undefined })) })
+              player.client.socket.emit('game>started', { id: waitingGame.id })
+            }
           })
 
           // try to free some memory
+          waitingGame = undefined
           if (games.length > 5) {
             games = games.filter((game) => {
               if ((game.start + 1200000 /* 20 min */) < Date.now()) {
@@ -109,6 +111,12 @@ module.exports = (printDebug) => {
 
         if (player.client.socket) player.client.socket.emit('key>set', { name, code, after })
       })
+    })
+
+    socket.on('sync>player', ({ position, hp }) => {
+      client.player.position = position
+      client.player.hp = hp
+      client.socket.emit('game>sync', { ...client.game, players: client.game.players.map(player => Object.assign({}, player, { client: undefined })) })
     })
 
     socket.on('disconnect', () => {

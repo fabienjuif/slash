@@ -1,4 +1,5 @@
 import { random } from 'slash-utils'
+import { Body } from 'matter-js'
 import { getWalls } from 'slash-generators'
 import Physics from './physics'
 import Renderer from '../../renderer/renderer'
@@ -95,16 +96,19 @@ const prepare = (state, previous) => {
       },
     },
   })
-  state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, x: worldSize.x / 2, y: worldSize.y / 2 }))
 
   // internet version
   if (server) {
+    state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, position: server.player.position }))
+
     // bin player (local) input to server
     Inputs.addListener(state.inputs, payload => Server.emit(server, 'key>set', payload))
 
     // add other players
-    add(state, server.players.map(player => Entity.create('player', { id: player.name, inputs: player, x: worldSize.x / 2, y: worldSize.y / 2 })))
+    add(state, server.players.map(player => Entity.create('player', { id: player.name, inputs: player, position: player.position })))
   } else {
+    state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, position: { x: worldSize.x / 2, y: worldSize.y / 2 } }))
+
     // AI version
     state.ai = Array.from({ length: previous.aiCount }).map(() => AI.create(state))
     const aiEntities = add(state, state.ai.map(inputs => Entity.create('player', { id: 'ai', inputs, x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100), color: 0xfffff00 })))
@@ -128,7 +132,7 @@ const prepare = (state, previous) => {
 }
 
 const update = (state, delta) => {
-  const { physics, player, staticEntities, ai, entities } = state
+  const { physics, player, staticEntities, ai, entities, server } = state
 
   // update player inputs
   state.inputs = Inputs.update(state.inputs)
@@ -138,6 +142,19 @@ const update = (state, delta) => {
 
   // update physics (and its entities)
   Physics.update(physics, delta)
+
+  // update server
+  if (server) {
+    Server.update(server, state.player)
+    if (server.synced) { // TODO: don't mutate bodies here
+      server.players.forEach(({ name, position, hp }) => {
+        const entity = entities.find(e => e.id === name)
+        Body.setPosition(entity.body, position)
+        entity.hp = hp
+      })
+      server.synced = false // TODO: don't mutate here
+    }
+  }
 
   // draw static entities (TODO: clear entities that are removed)
   state.staticEntities = staticEntities.filter(Entity.draw)

@@ -5,8 +5,10 @@ const create = () => {
     socket: io.connect(),
     token: undefined,
     game: undefined,
+    player: undefined,
     players: [], // player without the local one
     playerByName: new Map(),
+    framesSinceLastUpdate: 0,
   }
 
   server.socket.on('token>get', () => {
@@ -22,7 +24,8 @@ const create = () => {
   server.socket.on('game>set', (data) => {
     server.game = data
 
-    server.players = server.game.players.filter(player => player.name !== server.token)
+    server.player = server.game.players.find(player => player.name === server.token)
+    server.players = server.game.players.filter(player => player !== server.player)
 
     server.game.players.forEach((player) => {
       server.playerByName.set(player.name, player)
@@ -30,9 +33,9 @@ const create = () => {
   })
 
   server.socket.on('player>add', (data) => {
-    server.game.players.push(data)
     server.playerByName.set(data.name, data)
     if (data.name !== server.token) server.players.push(data)
+    else server.player = data
   })
 
   server.socket.on('game>started', () => {
@@ -41,11 +44,29 @@ const create = () => {
 
   server.socket.on('key>set', (data) => {
     const { name, code, after } = data
-    // TODO: make sure all references are updated?...
     server.playerByName.get(name).keys[code] = after
   })
 
+  server.socket.on('game>sync', (game) => {
+    server.synced = false
+
+    const { players } = game
+    players.forEach((player) => {
+      Object.assign(
+        server.playerByName.get(player.name),
+        player,
+      )
+    })
+
+    server.synced = true
+  })
+
   return server
+}
+
+const update = (server, entity) => {
+  // TODO: sync keys here instead of `key>set`
+  server.socket.emit('sync>player', { position: entity.body.position, hp: entity.hp })
 }
 
 const emit = (server, type, payload) => {
@@ -59,6 +80,7 @@ const clear = (server) => {
 
 export default {
   create,
+  update,
   emit,
   clear,
 }

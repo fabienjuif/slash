@@ -2,16 +2,23 @@
  * @param {Object} bindings Object as Map(code -> zone: ({ x, y, width, height }))
  */
 const create = (bindings) => {
-  const identifiers = {}
-  const keys = {}
+  const inputs = {
+    id: 'touch',
+    keys: {},
+    identifiers: {},
+    touched: false,
+    handle: undefined,
+    handleStop: undefined,
+  }
+
   const codes = Object.keys(bindings)
 
   codes.forEach((code) => {
-    identifiers[code] = undefined
-    keys[code] = false
+    inputs.identifiers[code] = undefined
+    inputs.keys[code] = false
   })
 
-  const handleStop = (event) => {
+  inputs.handleStop = (event) => {
     const { changedTouches } = event
 
     for (let i = 0; i < changedTouches.length; i += 1) {
@@ -20,15 +27,15 @@ const create = (bindings) => {
       for (let j = 0; j < codes.length; j += 1) {
         const code = codes[j]
 
-        if (identifiers[code] === identifier) {
-          keys[code] = false
-          identifiers[code] = undefined
+        if (inputs.identifiers[code] === identifier) {
+          inputs.keys[code] = false
+          inputs.identifiers[code] = undefined
         }
       }
     }
   }
 
-  const handle = (event) => {
+  inputs.handle = (event) => {
     const { changedTouches } = event
 
     for (let i = 0; i < changedTouches.length; i += 1) {
@@ -36,38 +43,33 @@ const create = (bindings) => {
 
       for (let j = 0; j < codes.length; j += 1) {
         const code = codes[j]
+        inputs.touched = true
 
-        if (identifiers[code] === undefined || (identifiers[code] === identifier)) {
+        if (inputs.identifiers[code] === undefined || (inputs.identifiers[code] === identifier)) {
           const { zone } = bindings[code]
 
           if (!zone) return
 
-          keys[code] = (
+          inputs.keys[code] = (
             clientX >= zone.x &&
             clientX <= zone.x + zone.width &&
             clientY >= zone.y &&
             clientY <= zone.y + zone.height
           )
 
-          if (keys[code]) identifiers[code] = identifier
+          if (inputs.keys[code]) inputs.identifiers[code] = identifier
         }
       }
     }
   }
 
-  window.addEventListener('touchstart', handle)
-  window.addEventListener('touchmove', handle)
-  window.addEventListener('touchend', handleStop)
-  window.addEventListener('touchcancel', handleStop)
-  window.addEventListener('touchleave', handleStop)
+  window.addEventListener('touchstart', inputs.handle)
+  window.addEventListener('touchmove', inputs.handle)
+  window.addEventListener('touchend', inputs.handleStop)
+  window.addEventListener('touchcancel', inputs.handleStop)
+  window.addEventListener('touchleave', inputs.handleStop)
 
-  return {
-    id: 'touch',
-    keys,
-    identifiers,
-    handle,
-    handleStop,
-  }
+  return inputs
 }
 
 const clear = (inputs) => {

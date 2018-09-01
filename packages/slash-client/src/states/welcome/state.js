@@ -55,11 +55,11 @@ const update = (state) => {
   const { keys, touch } = inputs
 
   state.inputs = Inputs.update(inputs)
+  state.isTouched = touch.touched
 
   if (keys.online) return 'lobby'
   if (keys.enter) {
     state.server = undefined
-    state.isTouched = !!touch.keys.enter
     return 'game'
   }
 

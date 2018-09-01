@@ -111,7 +111,7 @@ const update = (entity, delta) => {
   looking.y = (x === 0 ? y : y * 0.62)
 
   // server synchronization
-  if (serverPlayer && server.synchronized) {
+  if (server && serverPlayer && server.synchronized) {
     // - interpolation
     // TODO: process distance to catch it instead of hardcoded 1
     if (body.position.x < (serverPlayer.position.x - 10)) moving.x += 1

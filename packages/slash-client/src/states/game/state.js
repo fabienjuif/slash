@@ -180,7 +180,7 @@ const update = (state, delta) => {
   state.entities = entities.filter(Entity.draw)
 
   // next server tick
-  Server.synchronize(server)
+  if (server) Server.synchronize(server)
 
   // is it gameover ?
   if (

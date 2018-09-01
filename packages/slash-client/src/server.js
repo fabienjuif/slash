@@ -8,7 +8,7 @@ const create = () => {
     player: undefined,
     players: [], // player without the local one
     playerByName: new Map(),
-    framesSinceLastUpdate: 0,
+    synchronized: false,
   }
 
   server.socket.on('token>get', () => {
@@ -43,7 +43,7 @@ const create = () => {
   })
 
   server.socket.on('game>sync', (game) => {
-    server.synced = false
+    if (server.synchronized) return
 
     const { players } = game
     players.forEach((player) => {
@@ -53,7 +53,7 @@ const create = () => {
       )
     })
 
-    server.synced = true
+    server.synchronized = true
   })
 
   return server
@@ -79,9 +79,18 @@ const clear = (server) => {
   window.localStorage.removeItem('slash_token')
 }
 
+const getPlayer = (server, name) => server.playerByName.get(name)
+const isSynchronized = server => server.synchronized
+const synchronize = (server) => {
+  server.synchronized = false
+}
+
 export default {
   create,
   update,
   emit,
   clear,
+  getPlayer,
+  isSynchronized,
+  synchronize,
 }

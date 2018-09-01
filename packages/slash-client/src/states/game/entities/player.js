@@ -1,9 +1,10 @@
 import { Container, Graphics, Text } from 'pixi.js'
 import { Bodies, Body, Vector, Pair } from 'matter-js'
+import Server from '../../../server'
 import Sprites from '../../../sprites'
 import Timer from '../../../timer'
 
-const create = ({ id, position, inputs, color = 0xff00ff }) => {
+const create = ({ id, position, inputs, color = 0xff00ff, server }) => {
   const timers = {
     jump: Timer.create('jump', { cooldown: 3000, last: 100 }),
     shield: Timer.create('shield', { cooldown: 90, last: 100 }),
@@ -14,6 +15,8 @@ const create = ({ id, position, inputs, color = 0xff00ff }) => {
   const entity = {
     graphics: new Container(),
     body: Bodies.circle(position.x, position.y, 25),
+    server, // server, this is usefull to reconciliation and interpolation
+    serverPlayer: server ? Server.getPlayer(server, id) : undefined, // shorthand
     inputs,
     id,
     color,
@@ -82,9 +85,9 @@ const create = ({ id, position, inputs, color = 0xff00ff }) => {
 }
 
 const update = (entity, delta) => {
-  const { body, timers, looking, moving, inputs } = entity
+  const { body, timers, looking, moving, inputs, server, serverPlayer } = entity
   const { jump, shield, dead } = timers
-  const { keys } = inputs
+  const { keys } = (serverPlayer || inputs)
 
   // if player is dead we remove it from physical engine
   if (Timer.isCooldown(dead)) return false
@@ -106,6 +109,19 @@ const update = (entity, delta) => {
   moving.y = (x === 0 ? y : y * 0.62)
   looking.x = (y === 0 ? x : x * 0.62)
   looking.y = (x === 0 ? y : y * 0.62)
+
+  // server synchronization
+  if (serverPlayer && server.synchronized) {
+    // - interpolation
+    // TODO: process distance to catch it instead of hardcoded 1
+    if (body.position.x < (serverPlayer.position.x - 10)) moving.x += 1
+    if (body.position.x > (serverPlayer.position.x + 10)) moving.x -= 1
+    if (body.position.y < (serverPlayer.position.y - 10)) moving.y += 1
+    if (body.position.y > (serverPlayer.position.y + 10)) moving.y -= 1
+
+    // - hp
+    entity.hp = serverPlayer.hp
+  }
 
   // move using `setPosition` and scale it with time since `setVelocity` doesn't scale with time (yet ?)
   let velocity = 0.5

@@ -1,5 +1,4 @@
 import { random } from 'slash-utils'
-import { Body } from 'matter-js'
 import { getWalls } from 'slash-generators'
 import Physics from './physics'
 import Renderer from '../../renderer/renderer'
@@ -99,10 +98,27 @@ const prepare = (state, previous) => {
 
   // internet version
   if (server) {
-    state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, position: server.player.position }))
+    state.player = add(state, Entity.create(
+      'player',
+      {
+        id: 'player',
+        world: state.physics.world,
+        inputs: state.inputs,
+        position: server.player.position,
+        server,
+      },
+    ))
 
     // add other players
-    add(state, server.players.map(player => Entity.create('player', { id: player.name, inputs: player, position: player.position })))
+    add(state, server.players.map(player => Entity.create(
+      'player',
+      {
+        id: player.name,
+        inputs: player,
+        position: player.position,
+        server,
+      },
+    )))
   } else {
     state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, position: { x: worldSize.x / 2, y: worldSize.y / 2 } }))
 
@@ -145,23 +161,10 @@ const update = (state, delta) => {
   // update server
   if (server) {
     Server.update(server, player)
-    if (server.synced) { // TODO: don't mutate bodies here
-      server.players.forEach(({ name, position, hp, keys }) => {
-        const entity = entities.find(e => e.id === name)
-        if (!entity) return
-
-        Body.setPosition(entity.body, position)
-        entity.hp = hp
-        entity.inputs.keys = keys
-      })
-
-      if (
-        player.hp <= 0 ||
-        entities.filter(entity => entity.type === 'player').length < 2
-      ) return 'gameover'
-
-      server.synced = false // TODO: don't mutate here
-    }
+    if (
+      player.hp <= 0 ||
+      entities.filter(entity => entity.type === 'player').length < 2
+    ) return 'gameover'
   }
 
   // update ai
@@ -175,6 +178,9 @@ const update = (state, delta) => {
 
   // draw entities (TODO: clear entities that are removed)
   state.entities = entities.filter(Entity.draw)
+
+  // next server tick
+  Server.synchronize(server)
 
   // is it gameover ?
   if (

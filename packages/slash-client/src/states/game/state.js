@@ -1,4 +1,5 @@
 import Game from 'slash-game'
+import { random } from 'slash-utils'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
 import Entity from './entities/entity'
@@ -97,33 +98,22 @@ const prepare = (state) => {
 
   // AI version
   // TODO:
-  // state.ai = Array.from({ length: 2 }).map(() => AI.create(state))
-  const ai = Game.addPlayer(
-    state.game,
-    {
-      id: 'ai',
-      position: {
-        x: 500,
-        y: 500,
+  state.ai = Array.from({ length: 2 }).map(() => AI.create(state))
+  state.ai.forEach((ai) => {
+    const entity = Game.addPlayer(
+      state.game,
+      {
+        id: 'ai',
+        position: {
+          x: random(100, worldSize.x - 100),
+          y: random(100, worldSize.y - 100),
+        },
+        inputs: ai,
       },
-      inputs: AI.create(state),
-    },
-  )
-  ai.inputs.entity = ai
-  state.entities.push(Entity.create('player', ai)) // TODO: better handle this
-  // state.ai.push(ai)
-  // const aiEntities = add(state, state.ai.map(inputs => Entity.create(
-  //   'player',
-  //   {
-  //     id: 'ai',
-  //     inputs,
-  //     position: { x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100) },
-  //     color: 0xfffff00,
-  //   },
-  // )))
-  // aiEntities.forEach((entity) => {
-  //   entity.inputs.entity = entity
-  // })
+    )
+    entity.inputs.entity = entity
+    state.entities.push(Entity.create('player', entity)) // TODO: better handle this
+  })
 
   // UI
   if (isTouched) state.staticEntities.push(Entity.create('touchUI', { inputs: state.inputs }))

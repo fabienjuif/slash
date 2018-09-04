@@ -4,6 +4,7 @@ import http from 'http'
 import server from 'socket.io'
 import uuid from 'uuid/v1' // TODO: use JWT instead
 import { getWalls } from 'slash-generators'
+import Game from 'slash-game'
 
 module.exports = (printDebug) => {
   const PORT = process.env.PORT || 3000
@@ -32,6 +33,10 @@ module.exports = (printDebug) => {
   io.on('connection', (socket) => {
     let client = { socket }
     console.log(`👋 | ????????-????-????-????-???????????? | ${client.socket.id}`)
+
+    // const game = Game.create({ width: 1000, height: 1000 })
+    // Game.addPlayer(game, { id: 'fabien', position: { x: 300, y: 300 }, inputs: { keys: { down: true } } })
+    // Game.update(game, 10)
 
     socket.on('token>set', (token) => {
       client = clientsByToken.get(token)

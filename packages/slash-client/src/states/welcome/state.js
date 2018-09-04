@@ -1,6 +1,6 @@
+import { Timer } from 'slash-utils'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
-import Timer from '../../timer'
 import Entity from './entities/entity'
 
 const bindings = {

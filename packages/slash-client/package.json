@@ -8,7 +8,7 @@
     "dist:create": "mkdir -p dist/",
     "dist:copy": "cp -R public/* dist/",
     "dist:common": "run-s dist:create dist:copy",
-    "parcel:start": "parcel watch public/index.html --no-hmr",
+    "parcel:start": "parcel watch public/index.html --no-hmr --no-source-maps",
     "parcel:build": "parcel build public/index.html --no-source-maps",
     "build": "run-s dist:common parcel:build",
     "dev": "run-s dist:common parcel:start"
@@ -19,6 +19,7 @@
     "matter-js": "^0.14.2",
     "pixi-viewport": "^3.2.1",
     "pixi.js": "^4.8.1",
+    "slash-game": "^1.0.0",
     "slash-generators": "^1.0.0",
     "slash-utils": "^1.0.0",
     "socket.io-client": "^2.1.1"

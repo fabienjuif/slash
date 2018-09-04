@@ -1,18 +1,15 @@
 import { Container } from 'pixi.js'
-import { Bodies } from 'matter-js'
 import { choose } from 'slash-utils'
 import Sprites from '../../../sprites'
 
-const create = ({ x, y, width, height }) => {
-  const entity = {
-    graphics: new Container(),
-    body: Bodies.rectangle(x + width / 2, y + height / 2, width, height, { isStatic: true }),
-    x,
-    y,
-    width,
-    height,
-    drew: false,
-  }
+const create = (wall) => {
+  const entity = Object.assign(
+    wall,
+    {
+      graphics: new Container(),
+      drew: false,
+    },
+  )
 
   const sprites = Sprites.create()
   Promise
@@ -21,7 +18,7 @@ const create = ({ x, y, width, height }) => {
       // add them
       // - right
       Array
-        .from({ length: Math.round(height / 32) })
+        .from({ length: Math.round(entity.height / 32) })
         .forEach((value, index) => {
           const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
             sprites,
@@ -34,12 +31,12 @@ const create = ({ x, y, width, height }) => {
           ))
 
           sprite.scale = { x: 2, y: 2 }
-          sprite.position.x = width - 32
+          sprite.position.x = entity.width - 32
           sprite.position.y = 32 * index
         })
       // - left
       Array
-        .from({ length: Math.round(height / 32) })
+        .from({ length: Math.round(entity.height / 32) })
         .forEach((value, index) => {
           const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
             sprites,
@@ -57,7 +54,7 @@ const create = ({ x, y, width, height }) => {
         })
       // - top
       Array
-        .from({ length: Math.round(height / 32) })
+        .from({ length: Math.round(entity.width / 32) })
         .forEach((value, index) => {
           const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
             sprites,
@@ -75,7 +72,7 @@ const create = ({ x, y, width, height }) => {
         })
       // - bottom
       Array
-        .from({ length: Math.round(height / 32) })
+        .from({ length: Math.round(entity.width / 32) })
         .forEach((value, index) => {
           const sprite = entity.graphics.addChild(Sprites.asTilingSprites(
             sprites,
@@ -89,10 +86,11 @@ const create = ({ x, y, width, height }) => {
 
           sprite.scale = { x: 2, y: 2 }
           sprite.position.x = 32 * index
-          sprite.position.y = height - 32
+          sprite.position.y = entity.height - 32
         })
 
       // cache as bitmap (perf)
+      // TODO: cache all layer of walls + grass ?
       entity.graphics.cacheAsBitmap = true
     })
 
@@ -100,14 +98,12 @@ const create = ({ x, y, width, height }) => {
 }
 
 const draw = (entity) => {
-  const { x, y, graphics, drew } = entity
-
   // already drew once ? Then this is enough since wall are statics
-  if (drew) return true
+  if (entity.drew) return true
   entity.drew = true
 
-  graphics.position.x = x
-  graphics.position.y = y
+  entity.graphics.position.x = (entity.body.position.x - entity.width / 2)
+  entity.graphics.position.y = (entity.body.position.y - entity.height / 2)
 
   return true
 }

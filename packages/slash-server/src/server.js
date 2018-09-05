@@ -3,7 +3,6 @@ import serve from 'koa-static'
 import http from 'http'
 import server from 'socket.io'
 import uuid from 'uuid/v1' // TODO: use JWT instead
-import { getWalls } from 'slash-generators'
 import Game from 'slash-game'
 
 module.exports = (printDebug) => {
@@ -71,7 +70,7 @@ module.exports = (printDebug) => {
 
           client.game.players.forEach((player) => {
             if (player.client.socket) {
-              player.client.socket.binary(false).emit('game>set', Game.getView(client.game))
+              player.client.socket.binary(false).emit('game>set', Game.getInitView(client.game))
               player.client.socket.binary(false).emit('game>started', { id: client.game.id })
             }
           })
@@ -85,7 +84,7 @@ module.exports = (printDebug) => {
                 client.game.ended = true
                 client.game.players.forEach((player) => {
                   if (player.client.socket) {
-                    player.client.socket.binary(false).emit('game>ended', Game.getView(client.game))
+                    player.client.socket.binary(false).emit('game>sync', Game.getView(client.game))
                   }
                 })
 
@@ -119,7 +118,7 @@ module.exports = (printDebug) => {
         }
       } else {
         console.log(`🤗 | ${client.token} comes back to ${client.game.id} game`)
-        client.socket.binary(false).emit('game>set', Game.getView(client.game))
+        client.socket.binary(false).emit('game>set', Game.getInitView(client.game))
         client.socket.binary(false).emit('game>started', { id: client.game.id })
       }
     })

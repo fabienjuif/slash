@@ -38,11 +38,13 @@ const addAI = (game, player) => {
   game.ais.push(ai)
 }
 
-const create = ({ width, height, walls, players = [], start = Date.now() }) => {
+const create = ({ width, height, walls, players = [] }) => {
   const game = {
     width,
     height,
-    start,
+    start: undefined,
+    started: false,
+    ended: false,
     physics: Physics.create(),
     walls: [],
     players: [],
@@ -107,15 +109,21 @@ const synchronize = (current, next/* , delta TODO: use it for interpolation */) 
   })
 }
 
-const getView = game => Object.assign(
+const getView = game => ({
+  started: game.started,
+  ended: game.ended,
+  players: game.players.map(Player.getView),
+})
+
+const getInitView = game => Object.assign(
   {},
   game,
+  getView(game),
   {
     interval: undefined,
     physics: undefined,
     ais: undefined,
     walls: game.walls.map(Wall.getView),
-    players: game.players.map(Player.getView),
   },
 )
 
@@ -125,5 +133,6 @@ export default {
   addPlayer,
   addAI,
   getView,
+  getInitView,
   synchronize,
 }

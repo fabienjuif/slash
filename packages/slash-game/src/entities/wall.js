@@ -15,6 +15,17 @@ const create = ({ x, y, width, height }) => ({
   ),
 })
 
+const getView = wall => Object.assign(
+  {},
+  wall,
+  {
+    body: undefined,
+    x: wall.body.position.x, // TODO: use `position` like player entity
+    y: wall.body.position.y,
+  },
+)
+
 export default {
   create,
+  getView,
 }

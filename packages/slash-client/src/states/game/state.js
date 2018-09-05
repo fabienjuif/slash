@@ -3,28 +3,33 @@ import { random } from 'slash-utils'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
 import Entity from './entities/entity'
+import Server from '../../server'
 
 const create = ({ worldSize }) => ({
   game: undefined,
   player: undefined,
   worldSize,
   entities: [],
-  staticEntities: [],
+  ui: [],
 })
 
-const prepare = (state, previous) => {
+const prepare = (state, previous = {}) => {
   const { worldSize, isTouched } = state
+  const { server } = previous
 
-  state.game = Game.create({ width: worldSize.x, height: worldSize.y })
+  // register server
+  state.server = server
+
+  // create game
+  state.game = Game.create((server && server.game) || { width: worldSize.x, height: worldSize.y })
 
   // grass
-  state.entities.push(Entity.create('grass', { width: worldSize.x, height: worldSize.y }))
+  state.entities.push(Entity.create('grass', { width: state.game.width, height: state.game.height }))
 
   // walls
   state.entities.push(...state.game.walls.map(wall => Entity.create('wall', wall))) // TODO: better handle this
 
-  // player
-  // - inputs
+  // local player inputs
   state.inputs = Inputs.create({
     jump: {
       keyCode: 67, // c
@@ -81,20 +86,27 @@ const prepare = (state, previous) => {
       },
     },
   })
-  state.player = Game.addPlayer(
-    state.game,
-    {
-      id: 'player',
-      position: {
-        x: 300,
-        y: 300,
+
+  // local player
+  if (server) {
+    state.player = state.game.players.find(player => player.id === server.token)
+    state.player.inputs = state.inputs // TODO: don't mutate here
+  } else {
+    state.player = Game.addPlayer(
+      state.game,
+      {
+        id: 'player',
+        position: {
+          x: 300,
+          y: 300,
+        },
+        inputs: state.inputs,
       },
-      inputs: state.inputs,
-    },
-  )
+    )
+  }
 
   // AIs
-  Array.from({ length: previous.aiCount }).forEach((value, index) => Game.addAI(
+  Array.from({ length: server ? 0 : (previous.aiCount || 2) }).forEach((value, index) => Game.addAI(
     state.game,
     {
       id: `ai-classic-${index}`,
@@ -109,13 +121,13 @@ const prepare = (state, previous) => {
   state.entities.push(...state.game.players.map(player => Entity.create('player', player))) // TODO: better handle this
 
   // UI
-  if (isTouched) state.staticEntities.push(Entity.create('touchUI', { inputs: state.inputs }))
-  state.staticEntities.push(Entity.create('ui', { player: state.player }))
+  if (isTouched) state.ui.push(Entity.create('touchUI', { inputs: state.inputs }))
+  state.ui.push(Entity.create('ui', { player: state.player, game: state.game }))
 
   // add entities to renderer
-  const { player, renderer, staticEntities, entities } = state
+  const { player, renderer, ui, entities } = state
   Renderer.addToStage(renderer, { graphics: renderer.viewport })
-  Renderer.addToStage(renderer, staticEntities)
+  Renderer.addToStage(renderer, ui)
   Renderer.addToViewport(renderer, entities)
 
   // follow the player (camera)
@@ -123,19 +135,22 @@ const prepare = (state, previous) => {
 }
 
 const update = (state, delta) => {
-  const { staticEntities, entities } = state
+  const { ui, entities } = state
 
   // update player inputs
   // TODO: should go to the server
   // then come back will moving effects
   state.inputs = Inputs.update(state.inputs)
 
+  // ask for synchronisation
+  Server.update(state.server, state.inputs)
+
   // update game engine
   const gameState = Game.update(state.game, delta)
   if (gameState === 'gameover') return 'gameover'
 
   // draw static entities (TODO: clear entities that are removed)
-  state.staticEntities = staticEntities.filter(Entity.draw)
+  state.staticEntities = ui.filter(Entity.draw)
 
   // draw entities (TODO: clear entities that are removed)
   state.entities = entities.filter(Entity.draw)
@@ -147,9 +162,9 @@ const update = (state, delta) => {
 const clear = (state) => {
   Inputs.clear(state.inputs)
   state.entities.forEach(Entity.clear)
-  state.staticEntities.forEach(Entity.clear)
+  state.ui.forEach(Entity.clear)
   state.entities = []
-  state.staticEntities = []
+  state.ui = []
 }
 
 export default {

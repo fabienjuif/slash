@@ -1,8 +1,9 @@
 import { Bodies, Body, Vector, Pair } from 'matter-js'
 import { Timer } from 'slash-utils'
 
-const create = ({ id, position, inputs }) => ({
+const create = ({ id, position, inputs, isAI = false }) => ({
   type: 'player',
+  isAI,
   inputs,
   id,
   body: Bodies.circle(position.x, position.y, 25),
@@ -108,9 +109,23 @@ const collides = (entity, other, pair) => {
   if (entity.hp > 100) entity.hp = 100
 }
 
+const getView = player => Object.assign(
+  {},
+  player,
+  {
+    inputs: { // TODO:
+      keys: {},
+    },
+    position: player.body.position,
+    client: undefined,
+    body: undefined,
+  },
+)
+
 export default {
   create,
   update,
   collides,
   isDead,
+  getView,
 }

@@ -17,7 +17,7 @@ const getTimerFromDiff = (diff) => {
   return `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`
 }
 
-const create = ({ player }) => {
+const create = ({ player, game }) => {
   const graphics = new Container()
 
   const timer = graphics.addChild(new Container())
@@ -45,9 +45,10 @@ const create = ({ player }) => {
   return {
     graphics,
     player,
-    start: Date.now(),
+    start: new Date(game.start),
   }
 }
+
 const draw = (entity) => {
   const { graphics, player, start } = entity
   const { hp, timers } = player

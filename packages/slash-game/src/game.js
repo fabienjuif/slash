@@ -5,24 +5,6 @@ import Player from './entities/player'
 import Wall from './entities/wall'
 import AI from './ai/classic'
 
-const create = ({ width, height }) => {
-  const game = {
-    width,
-    height,
-    physics: Physics.create(),
-    players: [],
-    walls: [],
-    ais: [],
-  }
-
-  // TODO: remove `getWall` generator
-  // TODO: at leat change the signature
-  game.walls = getWalls({ width, height }).map(Wall.create)
-  Physics.add(game.physics, game.walls)
-
-  return game
-}
-
 const addPlayer = (game, player) => {
   const entity = Player.create(player)
 
@@ -55,6 +37,31 @@ const addAI = (game, player) => {
   game.ais.push(ai)
 }
 
+const create = ({ width, height, walls, players = [], start = Date.now() }) => {
+  const game = {
+    width,
+    height,
+    start,
+    physics: Physics.create(),
+    walls: [],
+    players: [],
+    ais: [],
+  }
+
+  // TODO: remove `getWall` generator
+  // TODO: at leat change the signature
+  game.walls = (walls || getWalls({ width, height })).map(Wall.create)
+  Physics.add(game.physics, game.walls)
+
+  // players and AI
+  game.players = players.map((player) => {
+    if (player.isAI) return addAI(game, player)
+    return addPlayer(game, player)
+  })
+
+  return game
+}
+
 const update = (game, delta) => {
   // update AIs
   game.ais.forEach(AI.update)
@@ -72,9 +79,21 @@ const update = (game, delta) => {
   return 'game'
 }
 
+const getView = game => Object.assign(
+  {},
+  game,
+  {
+    physics: undefined,
+    ais: undefined,
+    walls: game.walls.map(Wall.getView),
+    players: game.players.map(Player.getView),
+  },
+)
+
 export default {
   create,
   update,
   addPlayer,
   addAI,
+  getView,
 }

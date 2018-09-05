@@ -59,31 +59,27 @@ module.exports = (printDebug) => {
 
       // get a game for this player
       if (isNewClient) { // TODO: handle reconnection
-        if (!waitingGame) waitingGame = { id: uuid(), players: [], walls: getWalls({ x: 3200, y: 2400 }) }
+        if (!waitingGame) waitingGame = Game.create({ width: 1000, height: 1000 })
         client.game = waitingGame
-        client.player = { name: client.token, client, keys: {}, hp: 100, position: { x: 200 + (client.game.players.length * 600), y: 200 + (client.game.players.length * 600) } }
-
-        // tells everybody that new player is here
-        client.game.players.push(client.player)
-        client.game.players.forEach((player) => {
-          if (player.client.socket) player.client.socket.emit('player>add', Object.assign({}, client.player, { client: undefined }))
-        })
+        client.player = { id: client.token, inputs: { keys: {} }, position: { x: 200 + (client.game.players.length * 600), y: 200 + (client.game.players.length * 600) } }
+        client.player = Game.addPlayer(client.game, client.player)
+        client.player.client = client
 
         // start the game if all players are here
-        if (waitingGame.players.length === 2) {
-          waitingGame.started = true
-          waitingGame.start = Date.now()
-          games.push(waitingGame)
+        if (client.game.players.length === 2) {
+          waitingGame = undefined
+          client.game.started = true // TODO: move it to slash-game
+          client.game.start = Date.now() // TODO: move it to slash-game
+          games.push(client.game)
 
           client.game.players.forEach((player) => {
             if (player.client.socket) {
-              player.client.socket.emit('game>set', { ...waitingGame, players: waitingGame.players.map(p => ({ ...p, client: undefined })) })
-              player.client.socket.emit('game>started', { id: waitingGame.id })
+              player.client.socket.binary(false).emit('game>set', Game.getView(client.game))
+              player.client.socket.binary(false).emit('game>started', { id: client.game.id })
             }
           })
 
           // try to free some memory
-          waitingGame = undefined
           if (games.length > 5) {
             games = games.filter((game) => {
               if ((game.start + 1200000 /* 20 min */) < Date.now()) {
@@ -98,20 +94,13 @@ module.exports = (printDebug) => {
         }
       } else {
         console.log(`🤗 | ${client.token} comes back to ${client.game.id} game`)
-        client.socket.emit('game>set', { ...client.game, players: client.game.players.map(player => Object.assign({}, player, { client: undefined })) })
-        client.socket.emit('game>started', { id: client.game.id })
-      }
+        client.socket.binary(false).emit('game>set', Game.getView(client.game))
+        client.socket.binary(false).emit('game>started', { id: client.game.id })}
     })
 
-    socket.on('sync>player', (player) => {
-      Object.assign(client.player, player)
-      client.socket.emit(
-        'game>sync',
-        {
-          ...client.game,
-          players: client.game.players.map(p => ({ ...p, client: undefined })),
-        },
-      )
+    socket.on('sync>player', (inputs) => {
+      Object.assign(client.player.inputs, inputs)
+      client.socket.binary(false).emit('game>sync', Game.getView(client.game))
 
       // gameover - we clear the game from the ram
       if (client.game.players.filter(({ hp }) => hp > 0).length < 2) {

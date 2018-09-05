@@ -3,18 +3,16 @@ import { random } from 'slash-utils'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
 import Entity from './entities/entity'
-import AI from './ai/classic'
 
 const create = ({ worldSize }) => ({
   game: undefined,
   player: undefined,
-  ai: [],
   worldSize,
   entities: [],
   staticEntities: [],
 })
 
-const prepare = (state) => {
+const prepare = (state, previous) => {
   const { worldSize, isTouched } = state
 
   state.game = Game.create({ width: worldSize.x, height: worldSize.y })
@@ -94,26 +92,21 @@ const prepare = (state) => {
       inputs: state.inputs,
     },
   )
-  state.entities.push(Entity.create('player', state.player)) // TODO: better handle this
 
-  // AI version
-  // TODO:
-  state.ai = Array.from({ length: 2 }).map(() => AI.create(state))
-  state.ai.forEach((ai) => {
-    const entity = Game.addPlayer(
-      state.game,
-      {
-        id: 'ai',
-        position: {
-          x: random(100, worldSize.x - 100),
-          y: random(100, worldSize.y - 100),
-        },
-        inputs: ai,
+  // AIs
+  Array.from({ length: previous.aiCount }).forEach((value, index) => Game.addAI(
+    state.game,
+    {
+      id: `ai-classic-${index}`,
+      position: {
+        x: random(100, worldSize.x - 100),
+        y: random(100, worldSize.y - 100),
       },
-    )
-    entity.inputs.entity = entity
-    state.entities.push(Entity.create('player', entity)) // TODO: better handle this
-  })
+    },
+  ))
+
+  // add players entities
+  state.entities.push(...state.game.players.map(player => Entity.create('player', player))) // TODO: better handle this
 
   // UI
   if (isTouched) state.staticEntities.push(Entity.create('touchUI', { inputs: state.inputs }))
@@ -130,15 +123,12 @@ const prepare = (state) => {
 }
 
 const update = (state, delta) => {
-  const { staticEntities, ai, entities } = state
+  const { staticEntities, entities } = state
 
   // update player inputs
   // TODO: should go to the server
   // then come back will moving effects
   state.inputs = Inputs.update(state.inputs)
-
-  // update ai
-  ai.forEach(AI.update)
 
   // update game engine
   const gameState = Game.update(state.game, delta)

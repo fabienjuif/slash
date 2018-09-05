@@ -29,19 +29,9 @@ const create = () => {
   server.socket.on('game>sync', (game) => {
     if (server.synchronized) return
 
-    // TODO
+    server.game = game
 
-    console.log('sync !', game)
-
-    const { players } = game
-    // players.forEach((player) => {
-    //   Object.assign(
-    //     server.playerByName.get(player.name),
-    //     player,
-    //   )
-    // })
-
-    server.synchronized = true
+    server.synchronized = false
   })
 
   return server

@@ -10,6 +10,10 @@ const create = ({ id, position, inputs, isAI = false }) => ({
   hp: 100,
   kills: 0,
   invulnerabilityEffect: 0,
+  interpolation: {
+    x: 0,
+    y: 0,
+  },
   moving: {
     x: 0,
     y: 0,
@@ -29,9 +33,9 @@ const create = ({ id, position, inputs, isAI = false }) => ({
 const isDead = entity => Timer.isCooldown(entity.timers.dead)
 
 const update = (entity, delta) => {
-  const { body, timers, looking, moving, inputs, serverPlayer } = entity // TODO: remove serverPlayer
+  const { body, timers, looking, moving, interpolation, inputs } = entity
   const { jump, shield, dead } = timers
-  const { keys } = (serverPlayer || inputs)
+  const { keys } = inputs
 
   // if player is dead we remove it from physical engine
   if (isDead(entity)) return
@@ -49,8 +53,9 @@ const update = (entity, delta) => {
   if (!keys.right && !keys.left) x = 0
 
   // looking to deplacement direction
-  moving.x = (y === 0 ? x : x * 0.62) // 0.62 = 1 - Math.tan(45deg)
-  moving.y = (x === 0 ? y : y * 0.62)
+  // 0.62 = 1 - Math.tan(45deg)
+  moving.x = (y === 0 ? x : x * 0.62) + interpolation.x
+  moving.y = (x === 0 ? y : y * 0.62) + interpolation.y
   looking.x = (y === 0 ? x : x * 0.62)
   looking.y = (x === 0 ? y : y * 0.62)
 
@@ -80,7 +85,6 @@ const collides = (entity, other, pair) => {
   // does nothing if
   // - entity is not a slasher
   // - other channeling its shield
-
   if (!Timer.isChanneling(entity.timers.jump)) return
   if (Timer.isChanneling(other.timers.shield)) return
 
@@ -104,6 +108,7 @@ const collides = (entity, other, pair) => {
   // - gets its jump cooldown reset
   //   > this is not reset to Date.now() because the player certainly can't release the timer in 0ms
   // - steal some life
+  // FIXME: don't mutate object
   entity.timers.jump.next = Date.now() + 200
   entity.hp += 20
   if (entity.hp > 100) entity.hp = 100
@@ -113,12 +118,13 @@ const getView = player => Object.assign(
   {},
   player,
   {
-    inputs: { // TODO:
-      keys: {},
-    },
     position: player.body.position,
     client: undefined,
     body: undefined,
+    lastTouchedBy: player.lastTouchedBy ? { id: player.lastTouchedBy.id } : undefined,
+    inputs: {
+      keys: player.inputs.keys,
+    },
   },
 )
 

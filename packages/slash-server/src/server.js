@@ -34,16 +34,13 @@ module.exports = (printDebug) => {
     let client = { socket }
     console.log(`👋 | ????????-????-????-????-???????????? | ${client.socket.id}`)
 
-    // const game = Game.create({ width: 1000, height: 1000 })
-    // Game.addPlayer(game, { id: 'fabien', position: { x: 300, y: 300 }, inputs: { keys: { down: true } } })
-    // Game.update(game, 10)
-
     socket.on('token>set', (token) => {
       client = clientsByToken.get(token)
       if (!client) client = { token: uuid(), socket }
 
       client.socket = socket
       client.lastConnection = Date.now()
+      client.synchronized = true
 
       const isNewClient = !clientsByToken.has(client.token)
       if (isNewClient) {
@@ -79,6 +76,34 @@ module.exports = (printDebug) => {
             }
           })
 
+          client.game.interval = setInterval(
+            () => {
+              // update game
+              if (Game.update(client.game, 1000 / 60) === 'gameover') { // TODO: don't hardcode delta
+                games = games.filter(game => game !== client.game)
+
+                client.game.ended = true
+                client.game.players.forEach((player) => {
+                  if (player.client.socket) {
+                    player.client.socket.binary(false).emit('game>ended', Game.getView(client.game))
+                  }
+                })
+
+                clearInterval(client.game.interval)
+                console.log(`🚀 | ${games.length} games`)
+              }
+
+              // if game continues, send them to client that ask for it
+              client.game.players.forEach((player) => {
+                if (player.client.socket && !player.client.synchronized) {
+                  player.client.socket.binary(false).emit('game>sync', Game.getView(client.game))
+                  player.client.synchronized = true
+                }
+              })
+            },
+            1000 / 60, // 60 "FPS"
+          )
+
           // try to free some memory
           if (games.length > 5) {
             games = games.filter((game) => {
@@ -95,22 +120,15 @@ module.exports = (printDebug) => {
       } else {
         console.log(`🤗 | ${client.token} comes back to ${client.game.id} game`)
         client.socket.binary(false).emit('game>set', Game.getView(client.game))
-        client.socket.binary(false).emit('game>started', { id: client.game.id })}
+        client.socket.binary(false).emit('game>started', { id: client.game.id })
+      }
     })
 
     socket.on('sync>player', (inputs) => {
-      Object.assign(client.player.inputs, inputs)
-      client.socket.binary(false).emit('game>sync', Game.getView(client.game))
+      if (!client.synchronized) return
 
-      // gameover - we clear the game from the ram
-      if (client.game.players.filter(({ hp }) => hp > 0).length < 2) {
-        setTimeout(
-          () => {
-            games = games.filter(game => game !== client.game)
-          },
-          1000,
-        )
-      }
+      Object.assign(client.player.inputs, inputs)
+      client.synchronized = false
     })
 
     socket.on('disconnect', () => {

@@ -1,5 +1,7 @@
 import { chance } from 'slash-utils'
 
+// TODO: move this file to slash-game
+
 const WALL_WIDTH = 100
 
 export const getWall = ({ x = 0, y = 0, width = WALL_WIDTH, height = WALL_WIDTH } = {}) => ({
@@ -9,21 +11,21 @@ export const getWall = ({ x = 0, y = 0, width = WALL_WIDTH, height = WALL_WIDTH 
   height,
 })
 
-export const getWalls = (worldSize) => {
+export const getWalls = ({ width, height }) => {
   const walls = []
 
   // walls
   // - outside the level
-  walls.push({ width: worldSize.x })
-  walls.push({ height: worldSize.y })
-  walls.push({ x: (worldSize.x - WALL_WIDTH), height: worldSize.y })
-  walls.push({ y: (worldSize.y - WALL_WIDTH), width: worldSize.x })
+  walls.push({ x: width / 2, y: WALL_WIDTH / 2, width: width - (2 * WALL_WIDTH), height: WALL_WIDTH }) // top
+  walls.push({ x: WALL_WIDTH / 2, y: height / 2, height, width: WALL_WIDTH }) // left
+  walls.push({ x: width + (WALL_WIDTH / -2), y: height / 2, height, width: WALL_WIDTH }) // right
+  walls.push({ x: width / 2, y: height - (WALL_WIDTH / 2), width: width - (2 * WALL_WIDTH), height: WALL_WIDTH }) // bottom
 
   // - inside the level
-  for (let i = 0; i < worldSize.x / WALL_WIDTH; i += 1) {
-    for (let j = 0; j < worldSize.y / WALL_WIDTH; j += 1) {
+  for (let i = 1; i < (width / WALL_WIDTH) - 1; i += 1) {
+    for (let j = 1; j < (height / WALL_WIDTH) - 1; j += 1) {
       if (chance(10)) {
-        walls.push({ x: (i * WALL_WIDTH), y: (j * WALL_WIDTH) })
+        walls.push({ x: (i * WALL_WIDTH) + (WALL_WIDTH / 2), y: (j * WALL_WIDTH) + (WALL_WIDTH / 2) })
       }
     }
   }

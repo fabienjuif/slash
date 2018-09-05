@@ -5,9 +5,6 @@ const create = () => {
     socket: io.connect(),
     token: undefined,
     game: undefined,
-    player: undefined,
-    players: [], // player without the local one
-    playerByName: new Map(),
     synchronized: false,
   }
 
@@ -23,19 +20,6 @@ const create = () => {
 
   server.socket.on('game>set', (data) => {
     server.game = data
-
-    server.player = server.game.players.find(player => player.name === server.token)
-    server.players = server.game.players.filter(player => player !== server.player)
-
-    server.game.players.forEach((player) => {
-      server.playerByName.set(player.name, player)
-    })
-  })
-
-  server.socket.on('player>add', (data) => {
-    server.playerByName.set(data.name, data)
-    if (data.name !== server.token) server.players.push(data)
-    else server.player = data
   })
 
   server.socket.on('game>started', () => {
@@ -45,27 +29,19 @@ const create = () => {
   server.socket.on('game>sync', (game) => {
     if (server.synchronized) return
 
-    const { players } = game
-    players.forEach((player) => {
-      Object.assign(
-        server.playerByName.get(player.name),
-        player,
-      )
-    })
+    server.game = game
 
-    server.synchronized = true
+    server.synchronized = false
   })
 
   return server
 }
 
-const update = (server, entity) => {
-  server.socket.emit(
+const update = (server, inputs) => {
+  server.socket.binary(false).emit(
     'sync>player',
     {
-      position: entity.body.position,
-      hp: entity.hp,
-      keys: entity.inputs.keys,
+      keys: inputs.keys,
     },
   )
 }

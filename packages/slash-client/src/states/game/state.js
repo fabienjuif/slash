@@ -1,44 +1,35 @@
+import Game from 'slash-game'
 import { random } from 'slash-utils'
-import { getWalls } from 'slash-generators'
-import Physics from './physics'
 import Renderer from '../../renderer/renderer'
 import Inputs from '../../inputs/inputs'
-import Server from '../../server'
 import Entity from './entities/entity'
-import AI from './ai/classic'
-
-const add = (state, entities) => {
-  const { physics } = state
-
-  Physics.add(physics, entities)
-
-  state.entities = state.entities.concat(entities)
-
-  return entities
-}
+import Server from '../../server'
 
 const create = ({ worldSize }) => ({
-  ai: [],
+  game: undefined,
+  player: undefined,
   worldSize,
   entities: [],
-  staticEntities: [],
+  ui: [],
 })
 
-const prepare = (state, previous) => {
-  const { worldSize, isTouched, server } = state
+const prepare = (state, previous = {}) => {
+  const { worldSize, isTouched } = state
+  const { server } = previous
 
-  // create physic engine
-  state.physics = Physics.create()
+  // register server
+  state.server = server
+
+  // create game
+  state.game = Game.create((server && server.game) || { width: worldSize.x, height: worldSize.y })
 
   // grass
-  state.entities.push(Entity.create('grass', { width: worldSize.x, height: worldSize.y }))
+  state.entities.push(Entity.create('grass', { width: state.game.width, height: state.game.height }))
 
   // walls
-  add(state, ((server && server.game.walls) || getWalls(worldSize)).map(wall => Entity.create('wall', wall)))
+  state.entities.push(...state.game.walls.map(wall => Entity.create('wall', wall))) // TODO: better handle this
 
-  // player
-  // - inputs
-  // - entity
+  // local player inputs
   state.inputs = Inputs.create({
     jump: {
       keyCode: 67, // c
@@ -96,56 +87,47 @@ const prepare = (state, previous) => {
     },
   })
 
-  // internet version
+  // local player
   if (server) {
-    state.player = add(state, Entity.create(
-      'player',
+    state.player = state.game.players.find(player => player.id === server.token)
+    state.player.inputs = state.inputs // TODO: don't mutate here
+  } else {
+    state.player = Game.addPlayer(
+      state.game,
       {
         id: 'player',
-        world: state.physics.world,
+        position: {
+          x: 300,
+          y: 300,
+        },
         inputs: state.inputs,
-        position: server.player.position,
-        server,
       },
-    ))
-
-    // add other players
-    add(state, server.players.map(player => Entity.create(
-      'player',
-      {
-        id: player.name,
-        inputs: player,
-        position: player.position,
-        server,
-      },
-    )))
-  } else {
-    state.player = add(state, Entity.create('player', { id: 'player', world: state.physics.world, inputs: state.inputs, position: { x: worldSize.x / 2, y: worldSize.y / 2 } }))
-
-    // AI version
-    state.ai = Array.from({ length: previous.aiCount }).map(() => AI.create(state))
-    const aiEntities = add(state, state.ai.map(inputs => Entity.create(
-      'player',
-      {
-        id: 'ai',
-        inputs,
-        position: { x: random(100, worldSize.x - 100), y: random(100, worldSize.y - 100) },
-        color: 0xfffff00,
-      },
-    )))
-    aiEntities.forEach((entity) => {
-      entity.inputs.entity = entity
-    })
+    )
   }
 
+  // AIs
+  Array.from({ length: server ? 0 : (previous.aiCount || 2) }).forEach((value, index) => Game.addAI(
+    state.game,
+    {
+      id: `ai-classic-${index}`,
+      position: {
+        x: random(100, worldSize.x - 100),
+        y: random(100, worldSize.y - 100),
+      },
+    },
+  ))
+
+  // add players entities
+  state.entities.push(...state.game.players.map(player => Entity.create('player', player))) // TODO: better handle this
+
   // UI
-  if (isTouched) state.staticEntities.push(Entity.create('touchUI', { inputs: state.inputs }))
-  state.staticEntities.push(Entity.create('ui', { player: state.player }))
+  if (isTouched) state.ui.push(Entity.create('touchUI', { inputs: state.inputs }))
+  state.ui.push(Entity.create('ui', { player: state.player, game: state.game }))
 
   // add entities to renderer
-  const { player, renderer, staticEntities, entities } = state
+  const { player, renderer, ui, entities } = state
   Renderer.addToStage(renderer, { graphics: renderer.viewport })
-  Renderer.addToStage(renderer, staticEntities)
+  Renderer.addToStage(renderer, ui)
   Renderer.addToViewport(renderer, entities)
 
   // follow the player (camera)
@@ -153,53 +135,44 @@ const prepare = (state, previous) => {
 }
 
 const update = (state, delta) => {
-  const { physics, player, staticEntities, ai, entities, server } = state
+  const { ui, entities } = state
 
   // update player inputs
+  // TODO: should go to the server
+  // then come back will moving effects
   state.inputs = Inputs.update(state.inputs)
 
-  // update server
-  if (server) {
-    Server.update(server, player)
-    if (
-      player.hp <= 0 ||
-      entities.filter(entity => entity.type === 'player').length < 2
-    ) return 'gameover'
+  // ask for synchronisation
+  if (state.server) {
+    Server.update(state.server, state.inputs)
+
+    if (!Server.isSynchronized(state.server)) {
+      Server.synchronize(state.server)
+      Game.synchronize(state.game, state.server.game)
+    }
+
+    if (state.game.ended) return 'gameover'
+  } else {
+    const gameState = Game.update(state.game, delta)
+    if (gameState === 'gameover') return 'gameover'
   }
 
-  // update ai
-  ai.forEach(AI.update)
-
-  // update physics (and its entities)
-  Physics.update(physics, delta)
-
   // draw static entities (TODO: clear entities that are removed)
-  state.staticEntities = staticEntities.filter(Entity.draw)
+  state.staticEntities = ui.filter(Entity.draw)
 
   // draw entities (TODO: clear entities that are removed)
   state.entities = entities.filter(Entity.draw)
 
-  // next server tick
-  if (server) Server.synchronize(server)
-
   // is it gameover ?
-  if (
-    !server && (
-      player.hp <= 0 ||
-      entities.filter(entity => entity.type === 'player').length < 2
-    )
-  ) return 'gameover'
-
   return 'game'
 }
 
 const clear = (state) => {
   Inputs.clear(state.inputs)
   state.entities.forEach(Entity.clear)
-  state.staticEntities.forEach(Entity.clear)
+  state.ui.forEach(Entity.clear)
   state.entities = []
-  state.staticEntities = []
-  if (state.server) Server.clear(state.server)
+  state.ui = []
 }
 
 export default {

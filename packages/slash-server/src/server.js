@@ -3,7 +3,7 @@ import serve from 'koa-static'
 import http from 'http'
 import server from 'socket.io'
 import uuid from 'uuid/v1' // TODO: use JWT instead
-import { getWalls } from 'slash-generators'
+import Game from 'slash-game'
 
 module.exports = (printDebug) => {
   const PORT = process.env.PORT || 3000
@@ -39,6 +39,7 @@ module.exports = (printDebug) => {
 
       client.socket = socket
       client.lastConnection = Date.now()
+      client.synchronized = true
 
       const isNewClient = !clientsByToken.has(client.token)
       if (isNewClient) {
@@ -54,31 +55,55 @@ module.exports = (printDebug) => {
 
       // get a game for this player
       if (isNewClient) { // TODO: handle reconnection
-        if (!waitingGame) waitingGame = { id: uuid(), players: [], walls: getWalls({ x: 3200, y: 2400 }) }
+        if (!waitingGame) waitingGame = Game.create({ width: 1000, height: 1000 })
         client.game = waitingGame
-        client.player = { name: client.token, client, keys: {}, hp: 100, position: { x: 200 + (client.game.players.length * 600), y: 200 + (client.game.players.length * 600) } }
-
-        // tells everybody that new player is here
-        client.game.players.push(client.player)
-        client.game.players.forEach((player) => {
-          if (player.client.socket) player.client.socket.emit('player>add', Object.assign({}, client.player, { client: undefined }))
-        })
+        client.player = { id: client.token, inputs: { keys: {} }, position: { x: 200 + (client.game.players.length * 600), y: 200 + (client.game.players.length * 600) } }
+        client.player = Game.addPlayer(client.game, client.player)
+        client.player.client = client
 
         // start the game if all players are here
-        if (waitingGame.players.length === 2) {
-          waitingGame.started = true
-          waitingGame.start = Date.now()
-          games.push(waitingGame)
+        if (client.game.players.length === 2) {
+          waitingGame = undefined
+          client.game.started = true // TODO: move it to slash-game
+          client.game.start = Date.now() // TODO: move it to slash-game
+          games.push(client.game)
 
           client.game.players.forEach((player) => {
             if (player.client.socket) {
-              player.client.socket.emit('game>set', { ...waitingGame, players: waitingGame.players.map(p => ({ ...p, client: undefined })) })
-              player.client.socket.emit('game>started', { id: waitingGame.id })
+              player.client.socket.binary(false).emit('game>set', Game.getInitView(client.game))
+              player.client.socket.binary(false).emit('game>started', { id: client.game.id })
             }
           })
 
+          client.game.interval = setInterval(
+            () => {
+              // update game
+              if (Game.update(client.game, 1000 / 60) === 'gameover') { // TODO: don't hardcode delta
+                games = games.filter(game => game !== client.game)
+
+                client.game.ended = true
+                client.game.players.forEach((player) => {
+                  if (player.client.socket) {
+                    player.client.socket.binary(false).emit('game>sync', Game.getView(client.game))
+                  }
+                })
+
+                clearInterval(client.game.interval)
+                console.log(`🚀 | ${games.length} games`)
+              }
+
+              // if game continues, send them to client that ask for it
+              client.game.players.forEach((player) => {
+                if (player.client.socket && !player.client.synchronized) {
+                  player.client.socket.binary(false).emit('game>sync', Game.getView(client.game))
+                  player.client.synchronized = true
+                }
+              })
+            },
+            1000 / 60, // 60 "FPS"
+          )
+
           // try to free some memory
-          waitingGame = undefined
           if (games.length > 5) {
             games = games.filter((game) => {
               if ((game.start + 1200000 /* 20 min */) < Date.now()) {
@@ -93,30 +118,16 @@ module.exports = (printDebug) => {
         }
       } else {
         console.log(`🤗 | ${client.token} comes back to ${client.game.id} game`)
-        client.socket.emit('game>set', { ...client.game, players: client.game.players.map(player => Object.assign({}, player, { client: undefined })) })
-        client.socket.emit('game>started', { id: client.game.id })
+        client.socket.binary(false).emit('game>set', Game.getInitView(client.game))
+        client.socket.binary(false).emit('game>started', { id: client.game.id })
       }
     })
 
-    socket.on('sync>player', (player) => {
-      Object.assign(client.player, player)
-      client.socket.emit(
-        'game>sync',
-        {
-          ...client.game,
-          players: client.game.players.map(p => ({ ...p, client: undefined })),
-        },
-      )
+    socket.on('sync>player', (inputs) => {
+      if (!client.synchronized) return
 
-      // gameover - we clear the game from the ram
-      if (client.game.players.filter(({ hp }) => hp > 0).length < 2) {
-        setTimeout(
-          () => {
-            games = games.filter(game => game !== client.game)
-          },
-          1000,
-        )
-      }
+      Object.assign(client.player.inputs, inputs)
+      client.synchronized = false
     })
 
     socket.on('disconnect', () => {

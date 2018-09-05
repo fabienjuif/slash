@@ -27,7 +27,7 @@ const startGame = () => {
     window.slash = { states }
 
     let previousStateId
-    let stateId = 'welcome'
+    let stateId = TEST_PERF ? 'game' : 'welcome'
     let lastLoop = Date.now()
     let nbLoops = 0
     const start = Date.now()

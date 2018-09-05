@@ -6,7 +6,7 @@ const create = game => ({
   entity: undefined,
   lastxDirection: 0,
   lastyDirection: 0,
-  player: game.entities.find(entity => entity.id === 'player'),
+  player: game.players.find(player => player.id === 'player'),
   keys: {
     up: false,
     down: false,

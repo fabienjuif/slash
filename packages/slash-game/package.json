@@ -6,7 +6,6 @@
   "dependencies": {
     "lodash-es": "^4.17.10",
     "matter-js": "^0.14.2",
-    "slash-generators": "^1.0.0",
     "slash-utils": "^1.0.0"
   }
 }

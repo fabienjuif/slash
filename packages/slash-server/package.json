@@ -16,7 +16,6 @@
     "koa": "^2.5.2",
     "koa-static": "^5.0.0",
     "slash-game": "^1.0.0",
-    "slash-generators": "^1.0.0",
     "socket.io": "^2.1.1",
     "uuid": "^3.3.2"
   }

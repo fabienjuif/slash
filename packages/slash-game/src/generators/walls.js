@@ -1,7 +1,5 @@
 import { chance } from 'slash-utils'
 
-// TODO: move this file to slash-game
-
 const WALL_WIDTH = 100
 
 export const getWall = ({ x = 0, y = 0, width = WALL_WIDTH, height = WALL_WIDTH } = {}) => ({
@@ -11,7 +9,7 @@ export const getWall = ({ x = 0, y = 0, width = WALL_WIDTH, height = WALL_WIDTH 
   height,
 })
 
-export const getWalls = ({ width, height }) => {
+export default ({ width, height }) => {
   const walls = []
 
   // walls

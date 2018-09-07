@@ -1,6 +1,6 @@
 import { remove } from 'lodash-es'
 import { Body } from 'matter-js'
-import { getWalls } from 'slash-generators'
+import getWalls from './generators/walls'
 import Physics from './physics'
 import Player from './entities/player'
 import Wall from './entities/wall'

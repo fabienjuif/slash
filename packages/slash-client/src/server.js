@@ -26,10 +26,13 @@ const create = () => {
     server.game.started = true
   })
 
+  let nb = 0
   const sync = (game) => {
     if (server.synchronized) return
 
     Object.assign(server.game, game)
+    if (nb === 10) console.log(game)
+    nb += 1
 
     server.synchronized = false
   }

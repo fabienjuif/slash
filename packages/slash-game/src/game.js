@@ -85,6 +85,7 @@ const update = (game, delta) => {
 const synchronize = (current, next/* , delta TODO: use it for interpolation */) => {
   // game
   current.started = next.started
+  current.start = next.start
 
   // players
   current.players.forEach((player, index) => {
@@ -114,6 +115,7 @@ const synchronize = (current, next/* , delta TODO: use it for interpolation */) 
 
 const getView = game => ({
   started: game.started,
+  start: game.start,
   ended: game.ended,
   players: game.players.map(Player.getView),
 })

@@ -45,17 +45,17 @@ const create = ({ player, game }) => {
   return {
     graphics,
     player,
-    start: new Date(game.start),
+    game,
   }
 }
 
 const draw = (entity) => {
-  const { graphics, player, start } = entity
+  const { graphics, player, game } = entity
   const { hp, timers } = player
 
   // timer
   const timer = graphics.getChildByName('timer').getChildByName('text')
-  timer.text = getTimerFromDiff(Date.now() - start)
+  timer.text = getTimerFromDiff(Date.now() - game.start)
 
   // lifebar
   const lifebar = graphics.getChildByName('lifebar')

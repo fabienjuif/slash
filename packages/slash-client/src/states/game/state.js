@@ -143,19 +143,20 @@ const update = (state, delta) => {
   state.inputs = Inputs.update(state.inputs)
 
   // ask for synchronisation
+  let gameState = 'game'
   if (state.server) {
     Server.update(state.server, state.inputs)
 
     if (!Server.isSynchronized(state.server)) {
       Server.synchronize(state.server)
-      Game.synchronize(state.game, state.server.game)
+      gameState = Game.synchronize(state.game, state.server.game)
     }
-
-    if (state.game.ended) return 'gameover'
   } else {
-    const gameState = Game.update(state.game, delta)
-    if (gameState === 'gameover') return 'gameover'
+    gameState = Game.update(state.game, delta)
   }
+
+  // is it gameover ?
+  if (gameState === 'gameover') return 'gameover'
 
   // draw static entities (TODO: clear entities that are removed)
   state.staticEntities = ui.filter(Entity.draw)

@@ -26,13 +26,16 @@ const create = () => {
     server.game.started = true
   })
 
-  server.socket.on('game>sync', (game) => {
+  const sync = (game) => {
     if (server.synchronized) return
 
-    server.game = game
+    Object.assign(server.game, game)
 
     server.synchronized = false
-  })
+  }
+
+  server.socket.on('game>sync', sync)
+  server.socket.on('game>ended', sync)
 
   return server
 }

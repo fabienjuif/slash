@@ -1,4 +1,3 @@
-import { remove } from 'lodash-es'
 import { Body } from 'matter-js'
 import getWalls from './generators/walls'
 import Physics from './physics'
@@ -74,17 +73,17 @@ const update = (game, delta) => {
   Physics.update(game.physics, delta)
 
   // remove dead players
-  Physics.remove(game.physics, remove(game.players, Player.isDead))
+  const deadPlayers = game.players.filter(Player.isDead)
+  Physics.remove(game.physics, deadPlayers)
 
   // is it gameover ?
-  if (game.players.length <= 1) return 'gameover'
+  if (game.players.length - deadPlayers.length <= 1) return 'gameover'
 
   return 'game'
 }
 
 const synchronize = (current, next/* , delta TODO: use it for interpolation */) => {
   // game
-  current.ended = next.ended
   current.started = next.started
 
   // players
@@ -96,6 +95,7 @@ const synchronize = (current, next/* , delta TODO: use it for interpolation */) 
     Object.assign(player.timers, nextPlayer.timers)
     Object.assign(player.moving, nextPlayer.moving)
     Object.assign(player.looking, nextPlayer.looking)
+    player.kills = nextPlayer.kills
     player.hp = nextPlayer.hp
 
     Body.setPosition(player.body, nextPlayer.position)
@@ -107,6 +107,9 @@ const synchronize = (current, next/* , delta TODO: use it for interpolation */) 
     // if (player.body.position.y < (nextPlayer.position.y - 10)) player.interpolation.y = 1
     // if (player.body.position.y > (nextPlayer.position.y + 10)) player.interpolation.y = -1
   })
+
+  if (next.ended) return 'gameover'
+  return 'game'
 }
 
 const getView = game => ({

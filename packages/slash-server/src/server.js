@@ -79,17 +79,21 @@ module.exports = (printDebug) => {
             () => {
               // update game
               if (Game.update(client.game, 1000 / 60) === 'gameover') { // TODO: don't hardcode delta
+                // free resources
+                clearInterval(client.game.interval)
                 games = games.filter(game => game !== client.game)
 
+                // set game over to client
                 client.game.ended = true
                 client.game.players.forEach((player) => {
                   if (player.client.socket) {
-                    player.client.socket.binary(false).emit('game>sync', Game.getView(client.game))
+                    player.client.socket.binary(false).emit('game>ended', Game.getView(client.game))
                   }
                 })
 
-                clearInterval(client.game.interval)
                 console.log(`🚀 | ${games.length} games`)
+
+                return
               }
 
               // if game continues, send them to client that ask for it

@@ -4,10 +4,14 @@ import Client from './client'
 const create = () => ({
   game: Game.create({ width: 1000, height: 1000 }),
   clients: [],
-  interval: undefined,
+  intervals: [],
 })
 
 const addClient = (instance, { socket, token }) => {
+  // remove disconnected clients
+  // TODO: make it a self function
+  instance.clients = instance.clients.filter(client => !client.socket.disconnected)
+
   // create client
   const client = Client.create({ socket, token })
 
@@ -39,7 +43,10 @@ const addClient = (instance, { socket, token }) => {
   // attach player to the client // TODO: should we attach instance to player instead ?
   Client.setPlayerAndGame(client, player, instance.game)
 
+  instance.clients.forEach(Client.emitLobby)
+
   // listen to events
+  Client.listenReady(client)
   Client.listenSync(client)
 
   // if the game is already started, then this is a reconnection
@@ -48,14 +55,14 @@ const addClient = (instance, { socket, token }) => {
 }
 
 const stop = (instance) => {
-  if (instance.interval !== undefined) clearInterval(instance.interval)
+  instance.intervals.forEach(clearInterval)
 
   // set gameover to clients
   instance.game.ended = true // TODO: don't mutate game here
   instance.clients.forEach(Client.emitGameOver)
 }
 
-const update = (instance) => {
+const updateGame = (instance) => {
   // remove disconnected clients
   // they can be re-attached after by the server if needed
   instance.clients = instance.clients.filter(client => !client.socket.disconnected)
@@ -71,34 +78,41 @@ const update = (instance) => {
   }
 }
 
-const start = (instance) => {
+const startGame = (instance) => {
   // send notification to all players
   instance.clients.forEach(Client.emitStart)
 
   // loop
-  instance.game.interval = setInterval(() => update(instance), 1000 / 60) // 60 "FPS"
+  instance.intervals.push(setInterval(() => updateGame(instance), 1000 / 60)) // 60 "FPS"
 }
 
-
-const startGameIfReady = (instance) => {
-  // not ready
-  if (instance.clients.length < 2) return false
-
+const run = (instance) => {
   // already started
-  if (instance.game.started) return false
+  if (instance.game.started) return
 
-  // start the game
-  instance.game.started = true // TODO: move it to slash-game
-  instance.game.start = Date.now() // TODO: move it to slash-game
-  start(instance)
-  return true
+  // wait for user to be ready
+  const waitInterval = setInterval(
+    () => {
+      if (!instance.clients.find(client => !client.isReady) && instance.clients.length > 0) {
+        // remove interval
+        clearInterval(waitInterval)
+
+        // start game
+        instance.game.started = true // TODO: move it to slash-game
+        instance.game.start = Date.now() // TODO: move it to slash-game
+        startGame(instance)
+      }
+    },
+    200,
+  )
+  instance.intervals.push(waitInterval)
 }
 
 export default {
   create,
   stop,
-  update,
-  start,
+  updateGame,
+  startGame,
   addClient,
-  startGameIfReady,
+  run,
 }

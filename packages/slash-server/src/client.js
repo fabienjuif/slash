@@ -6,11 +6,16 @@ const create = ({ socket, token }) => ({
   game: undefined,
   player: undefined,
   synchronized: true,
+  isReady: false,
 })
 
 const setPlayerAndGame = (client, player, game) => {
   client.game = game
   client.player = player
+}
+
+const emitLobby = (client) => {
+  client.socket.binary(false).emit('lobby>sync', Game.getInitView(client.game))
 }
 
 const emitStart = (client) => {
@@ -38,11 +43,20 @@ const listenSync = (client) => {
   })
 }
 
+const listenReady = (client) => {
+  client.socket.on('ready>set', () => {
+    console.log(client.token, 'is ready')
+    client.isReady = true
+  })
+}
+
 export default {
   create,
   setPlayerAndGame,
+  emitLobby,
   emitStart,
   emitGameOver,
   emitSync,
   listenSync,
+  listenReady,
 }

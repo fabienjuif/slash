@@ -11,7 +11,7 @@ module.exports = (printDebug) => {
 
   const koa = new Koa()
   const app = http.createServer(koa.callback())
-  const io = server(app)
+  const io = server(app, { pingInterval: 200 })
   const servePath = `${PWD}/../slash-client/dist`
 
   koa.use(serve(servePath))

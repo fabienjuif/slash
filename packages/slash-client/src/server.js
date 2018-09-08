@@ -6,7 +6,18 @@ const create = () => {
     token: undefined,
     game: undefined,
     synchronized: false,
+    latencyHistory: [],
+    latency: 0,
   }
+
+  server.socket.on('pong', (ms) => {
+    // use 10 frames for latency smoothing
+    server.latencyHistory.push(ms)
+    if (server.latencyHistory.length >= 10) server.latencyHistory.shift()
+
+    // latency
+    server.latency = Math.round(server.latencyHistory.reduce((acc, curr) => acc + curr, 0) / server.latencyHistory.length)
+  })
 
   server.socket.on('token>get', () => {
     server.token = window.localStorage.getItem('slash_token')

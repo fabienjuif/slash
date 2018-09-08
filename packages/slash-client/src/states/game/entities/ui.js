@@ -17,7 +17,7 @@ const getTimerFromDiff = (diff) => {
   return `${pad(minutes)}:${pad(seconds)}:${pad(milliseconds)}`
 }
 
-const create = ({ player, game }) => {
+const create = ({ player, game, server }) => {
   const graphics = new Container()
 
   const timer = graphics.addChild(new Container())
@@ -33,6 +33,21 @@ const create = ({ player, game }) => {
   timerText.position.x = 10
   timerText.position.y = 5
 
+  if (server) {
+    const ping = graphics.addChild(new Container())
+    ping.name = 'ping'
+    const pingBackground = ping.addChild(new Graphics())
+    pingBackground.beginFill(0, 0.2)
+    pingBackground.drawRect(0, 0, 120, 30)
+    pingBackground.endFill()
+    ping.position.x = window.innerWidth - 130
+    ping.position.y = 42
+    const pingText = ping.addChild(new Text('', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 }))
+    pingText.name = 'text'
+    pingText.position.x = 10
+    pingText.position.y = 5
+  }
+
   const lifebar = graphics.addChild(new Graphics())
   lifebar.name = 'lifebar'
 
@@ -46,16 +61,23 @@ const create = ({ player, game }) => {
     graphics,
     player,
     game,
+    server,
   }
 }
 
 const draw = (entity) => {
-  const { graphics, player, game } = entity
+  const { graphics, player, game, server } = entity
   const { hp, timers } = player
 
   // timer
   const timer = graphics.getChildByName('timer').getChildByName('text')
   timer.text = getTimerFromDiff(Date.now() - game.start)
+
+  // ping
+  if (server) {
+    const ping = graphics.getChildByName('ping').getChildByName('text')
+    ping.text = `${server.latency} ms`.padStart(8, ' ')
+  }
 
   // lifebar
   const lifebar = graphics.getChildByName('lifebar')

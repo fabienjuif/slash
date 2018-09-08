@@ -8,6 +8,7 @@ import Server from '../../server'
 const create = ({ worldSize }) => ({
   game: undefined,
   player: undefined,
+  server: undefined,
   worldSize,
   entities: [],
   ui: [],
@@ -122,7 +123,7 @@ const prepare = (state, previous = {}) => {
 
   // UI
   if (isTouched) state.ui.push(Entity.create('touchUI', { inputs: state.inputs }))
-  state.ui.push(Entity.create('ui', { player: state.player, game: state.game }))
+  state.ui.push(Entity.create('ui', { player: state.player, game: state.game, server: state.server }))
 
   // add entities to renderer
   const { player, renderer, ui, entities } = state

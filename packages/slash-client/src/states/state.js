@@ -7,8 +7,8 @@ import Welcome from './welcome/state'
 
 const create = (id, renderer, options) => {
   const fps = new Text('0', { fill: 'white', fontFamily: 'Courier New', fontSize: 20 })
-  fps.position.y = 60
-  fps.position.x = window.innerWidth - 50
+  fps.position.y = 82
+  fps.position.x = window.innerWidth - 130
 
   let state
   if (id === 'game') state = Game.create(options)
@@ -33,7 +33,7 @@ const update = (state, delta) => {
   // update fps
   lastFPS.push(1000 / delta)
   if (lastFPS.length > 10) {
-    fps.text = Math.trunc(lastFPS.reduce((acc, curr) => acc + curr, 0) / lastFPS.length)
+    fps.text = `${Math.trunc(lastFPS.reduce((acc, curr) => acc + curr, 0) / lastFPS.length)} fps`.padStart(9, ' ')
     state.lastFPS = []
   }
 

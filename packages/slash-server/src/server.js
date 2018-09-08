@@ -34,30 +34,29 @@ module.exports = (printDebug) => {
     socket.on('token>set', (token) => {
       // attach token to socket --> this is a user
       user = tokens.get(token)
-      const knownUser = !!user
-      if (knownUser) {
-        user.socket = socket
-        console.log(`🤝 | ${user.token} | ${user.socket.id}`)
-      } else {
-        user = { token: uuid(), socket, lastConnection: Date.now() }
+      const newUser = !user
+      if (newUser) {
+        user = { token: uuid(), socket, lastConnection: Date.now(), instance }
         tokens.set(user.token, user)
+
         console.log(`🎉 | ${user.token} | ${user.socket.id}`)
+      } else {
+        user.socket = socket
+        if (user.instance.game.ended) user.instance = instance
+
+        console.log(`🤝 | ${user.token} | ${user.socket.id}`)
       }
-      socket.emit('token>set', user.token)
 
       // add the user to the current instance --> it becomes a client
-      // TODO: attach to its previous instance (handle reconnection)
-      if (knownUser) Instance.addClient(user.instance, user)
-      else {
-        Instance.addClient(instance, user)
-        user.instance = instance
-      }
+      Instance.addClient(user.instance, user)
+      socket.emit('token>set', user.token)
 
       // start the game if not already started
       if (Instance.startGameIfReady(instance)) {
         instances = instances.concat(instance).filter((currentInstance) => {
           if (currentInstance.game.ended) return false
           if ((currentInstance.game.start + 1200000 /* 20 min */) < Date.now()) {
+            currentInstance.game.ended = true
             console.log(`💀 | timeout on game ${currentInstance.game.id}`)
             return false
           }
@@ -80,7 +79,7 @@ module.exports = (printDebug) => {
             console.log(`💀 | ${user.token}`)
           }
         },
-        2000,
+        300000, /* 5 min */
       )
 
       console.log(`😨 | ${user.token} | ${socket.id}`)

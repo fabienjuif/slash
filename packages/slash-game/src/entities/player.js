@@ -38,8 +38,6 @@ const update = (entity, delta) => {
   const { jump, shield, dead } = timers
   const keys = (inputsLag ? inputs.delayedKeys : inputs.keys)
 
-  console.log(keys.left)
-
   // if player is dead we remove it from physical engine
   if (isDead(entity)) return
 

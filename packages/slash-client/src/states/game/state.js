@@ -86,11 +86,14 @@ const prepare = (state, previous = {}) => {
         height: 80,
       },
     },
+  }, {
+    server: state.server,
   })
 
   // local player
   if (server) {
     state.player = state.game.players.find(player => player.id === server.token)
+    state.player.inputsLag = true
     state.player.inputs = state.inputs // TODO: don't mutate here
   } else {
     state.player = Game.addPlayer(

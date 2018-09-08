@@ -7,6 +7,7 @@ const create = ({ id, position, inputs, isAI = false }) => ({
   inputs,
   id,
   body: Bodies.circle(position.x, position.y, 25),
+  inputsLag: false,
   hp: 100,
   kills: 0,
   invulnerabilityEffect: 0,
@@ -33,9 +34,11 @@ const create = ({ id, position, inputs, isAI = false }) => ({
 const isDead = entity => Timer.isCooldown(entity.timers.dead)
 
 const update = (entity, delta) => {
-  const { body, timers, looking, moving, interpolation, inputs } = entity
+  const { body, timers, looking, moving, interpolation, inputs, inputsLag } = entity
   const { jump, shield, dead } = timers
-  const { keys } = inputs
+  const keys = (inputsLag ? inputs.delayedKeys : inputs.keys)
+
+  console.log(keys.left)
 
   // if player is dead we remove it from physical engine
   if (isDead(entity)) return
@@ -118,6 +121,7 @@ const getView = player => Object.assign(
   {},
   player,
   {
+    inputsLag: undefined,
     position: player.body.position,
     client: undefined,
     body: undefined,

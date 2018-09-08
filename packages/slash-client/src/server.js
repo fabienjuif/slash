@@ -5,7 +5,7 @@ const create = () => {
     socket: io.connect(),
     token: undefined,
     game: undefined,
-    synchronized: false,
+    responded: true,
     latencyHistory: [],
     latency: 0,
   }
@@ -37,15 +37,9 @@ const create = () => {
     server.game.started = true
   })
 
-  let nb = 0
   const sync = (game) => {
-    if (server.synchronized) return
-
     Object.assign(server.game, game)
-    if (nb === 10) console.log(game)
-    nb += 1
-
-    server.synchronized = false
+    server.responded = true
   }
 
   server.socket.on('game>sync', sync)
@@ -73,10 +67,6 @@ const clear = (server) => {
 }
 
 const getPlayer = (server, name) => server.playerByName.get(name)
-const isSynchronized = server => server.synchronized
-const synchronize = (server) => {
-  server.synchronized = false
-}
 
 export default {
   create,
@@ -84,6 +74,4 @@ export default {
   emit,
   clear,
   getPlayer,
-  isSynchronized,
-  synchronize,
 }

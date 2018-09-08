@@ -148,9 +148,11 @@ const update = (state, delta) => {
   if (state.server) {
     Server.update(state.server, state.inputs)
 
-    if (!Server.isSynchronized(state.server)) {
-      Server.synchronize(state.server)
+    if (state.server.responded) {
+      state.server.responded = false
       gameState = Game.synchronize(state.game, state.server.game)
+    } else {
+      Game.update(state.game, delta)
     }
   } else {
     gameState = Game.update(state.game, delta)

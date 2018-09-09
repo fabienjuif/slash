@@ -134,7 +134,11 @@ const draw = (entity) => {
   }
 
   // kill number
-  graphics.getChildByName('killedNumber').text = entity.kills.toString()
+  // TODO: there is a condition because sprite can be not loaded
+  // TODO: with the other TODO above making it a sub entity maybe it would resolve both
+  if (graphics.getChildByName('killedNumber')) {
+    graphics.getChildByName('killedNumber').text = entity.kills.toString()
+  }
 
   // move graphics
   graphics.position.x = body.position.x

@@ -29,6 +29,10 @@ const create = () => {
     server.token = token
   })
 
+  server.socket.on('lobby>sync', (game) => {
+    server.game = game
+  })
+
   server.socket.on('game>set', (data) => {
     server.game = data
   })

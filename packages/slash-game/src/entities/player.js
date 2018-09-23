@@ -1,7 +1,7 @@
 import { Bodies, Body, Vector, Pair } from 'matter-js'
 import { Timer } from 'slash-utils'
 
-const create = ({ id, position, inputs, isAI = false }) => ({
+const create = ({ id, position = { x: 0, y: 0 }, inputs, isAI = false }) => ({
   type: 'player',
   isAI,
   inputs,
@@ -130,10 +130,15 @@ const getView = player => Object.assign(
   },
 )
 
+const setPosition = (player, position) => {
+  Body.setPosition(player.body, position)
+}
+
 export default {
   create,
   update,
   collides,
   isDead,
   getView,
+  setPosition,
 }

@@ -10,6 +10,14 @@ const DELTA_TARGET = (1000 / 60) // 60 FPS
 const addPlayer = (game, player) => {
   const entity = Player.create(player)
 
+  Player.setPosition(
+    entity,
+    {
+      x: 200 + (game.players.length * 500),
+      y: 200 + (game.players.length * 500),
+    },
+  )
+
   Physics.add(game.physics, entity)
   game.players.push(entity)
 
@@ -39,6 +47,22 @@ const addAI = (game, player) => {
   game.ais.push(ai)
 }
 
+const generateRing = (game) => {
+  // set the ring proportionnaly to the player count
+  const width = ((game.players.length - 1) * 500) + 400
+  const height = ((game.players.length - 1) * 500) + 400
+
+  game.width = width
+  game.height = height
+
+  // remove old walls
+  Physics.remove(game.physics, game.walls)
+
+  // generate new walls
+  game.walls = getWalls({ width, height }).map(Wall.create)
+  Physics.add(game.physics, game.walls)
+}
+
 const create = ({ width, height, walls, players = [] }) => {
   const game = {
     width,
@@ -53,7 +77,6 @@ const create = ({ width, height, walls, players = [] }) => {
   }
 
   // TODO: remove `getWall` generator
-  // TODO: at leat change the signature
   game.walls = (walls || getWalls({ width, height })).map(Wall.create)
   Physics.add(game.physics, game.walls)
 
@@ -139,4 +162,5 @@ export default {
   getView,
   getInitView,
   synchronize,
+  generateRing,
 }

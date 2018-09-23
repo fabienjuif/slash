@@ -23,7 +23,7 @@ module.exports = (printDebug) => {
     }
   })
 
-  let instance = Instance.create()
+  let instance
   let instances = []
   const tokens = new Map()
 
@@ -32,6 +32,13 @@ module.exports = (printDebug) => {
     console.log(`👋 | ????????-????-????-????-???????????? | ${user.socket.id}`)
 
     socket.on('token>set', (token) => {
+      // look at instance state and create a new one if needed
+      if (!instance || instance.game.ended) {
+        instance = Instance.create()
+        Instance.run(instance)
+        instances.push(instance)
+      }
+
       // attach token to socket --> this is a user
       user = tokens.get(token)
       const newUser = !user
@@ -51,22 +58,20 @@ module.exports = (printDebug) => {
       Instance.addClient(user.instance, user)
       socket.emit('token>set', user.token)
 
-      // start the game if not already started
-      if (Instance.startGameIfReady(instance)) {
-        instances = instances.concat(instance).filter((currentInstance) => {
-          if (currentInstance.game.ended) return false
-          if ((currentInstance.game.start + 1200000 /* 20 min */) < Date.now()) {
-            currentInstance.game.ended = true
-            console.log(`💀 | timeout on game ${currentInstance.game.id}`)
-            return false
-          }
+      // try to clear up instances
+      instances = instances.filter((currentInstance) => {
+        if (currentInstance.game.ended) return false
+        if ((currentInstance.game.start + 1200000 /* 20 min */) < Date.now()) {
+          currentInstance.game.ended = true
+          Instance.stop(instance)
+          console.log(`💀 | timeout on game ${currentInstance.game.id}`)
+          return false
+        }
 
-          return true
-        })
-        instance = Instance.create()
+        return true
+      })
 
-        console.log(`🚀 | ${instances.length} running`)
-      }
+      console.log(`🚀 | ${instances.length} running`)
     })
 
     socket.on('disconnect', () => {

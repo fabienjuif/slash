@@ -20,11 +20,13 @@ const addClient = (instance, { socket, token }) => {
 
   // find a player to the client
   let player
-  if (instance.game.started) {
+  if (!instance.game.ended) {
     // - this is a reconnexion case, we find the player matching the client toker
     player = instance.game.players.find(currentPlayer => currentPlayer.id === client.token)
-  } else {
-    // - this is a new game case, we create a player for this client
+  }
+
+  // - the player is not found (could be a new game, or a reconnexion past an ended game)
+  if (!player) {
     player = Game.addPlayer(
       instance.game,
       {

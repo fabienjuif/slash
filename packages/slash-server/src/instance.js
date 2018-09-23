@@ -2,7 +2,7 @@ import Game from 'slash-game'
 import Client from './client'
 
 const create = () => ({
-  game: Game.create({ width: 1000, height: 1000 }),
+  game: Game.create({ width: 10, height: 10 }), // create a fake game for lobby
   clients: [],
   intervals: [],
 })
@@ -33,10 +33,6 @@ const addClient = (instance, { socket, token }) => {
         id: client.token,
         inputs: {
           keys: {},
-        },
-        position: {
-          x: 200 + (instance.game.players.length * 600),
-          y: 200 + (instance.game.players.length * 600),
         },
       },
     )
@@ -100,6 +96,8 @@ const run = (instance) => {
         clearInterval(waitInterval)
 
         // start game
+        // -- recreate a game
+        Game.generateRing(instance.game)
         instance.game.started = true // TODO: move it to slash-game
         instance.game.start = Date.now() // TODO: move it to slash-game
         startGame(instance)

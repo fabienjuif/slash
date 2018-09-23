@@ -30,7 +30,7 @@ const emitGameOver = (client) => {
 const emitSync = (client) => { // TODO: use volatile messages ?
   if (client.synchronized) return
 
-  client.socket.binary(false).emit('game>sync', Game.getView(client.game))
+  client.socket.binary(false).volatile.emit('game>sync', Game.getView(client.game))
   client.synchronized = true
 }
 

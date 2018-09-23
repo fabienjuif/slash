@@ -5,6 +5,8 @@ import Player from './entities/player'
 import Wall from './entities/wall'
 import AI from './ai/classic'
 
+const DELTA_TARGET = (1000 / 60) // 60 FPS
+
 const addPlayer = (game, player) => {
   const entity = Player.create(player)
 
@@ -82,7 +84,7 @@ const update = (game, delta) => {
   return 'game'
 }
 
-const synchronize = (current, next/* , delta TODO: use it for interpolation */) => {
+const synchronize = (current, next, delta) => {
   // game
   current.started = next.started
   current.start = next.start
@@ -99,14 +101,11 @@ const synchronize = (current, next/* , delta TODO: use it for interpolation */) 
     player.kills = nextPlayer.kills
     player.hp = nextPlayer.hp
 
-    Body.setPosition(player.body, nextPlayer.position)
-
-    // TODO: interpolation
-    // TODO: process distance to catch it instead of hardcoded 1
-    // if (player.body.position.x < (nextPlayer.position.x - 10)) player.interpolation.x = 1
-    // if (player.body.position.x > (nextPlayer.position.x + 10)) player.interpolation.x = -1
-    // if (player.body.position.y < (nextPlayer.position.y - 10)) player.interpolation.y = 1
-    // if (player.body.position.y > (nextPlayer.position.y + 10)) player.interpolation.y = -1
+    const newPosition = {
+      x: player.body.position.x + ((nextPlayer.position.x - player.body.position.x) * delta / (5 * DELTA_TARGET)),
+      y: player.body.position.y + ((nextPlayer.position.y - player.body.position.y) * delta / (5 * DELTA_TARGET)),
+    }
+    Body.setPosition(player.body, newPosition)
   })
 
   if (next.ended) return 'gameover'
